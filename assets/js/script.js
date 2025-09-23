@@ -166,40 +166,41 @@ function extractAwemeId(input) {
 }
 
 // 处理抖音短链接的重定向 - 新增函数
+// 处理抖音短链接的重定向 - 使用Node.js代理
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('尝试处理抖音短链接:', shortLink);
     
-    // 由于抖音的CSP限制(blocked frame-ancestors)，iframe方案无法工作
-    // 我们将使用替代方案：
+    // 使用相对路径进行重定向处理，适配Cloudflare Pages
+    const proxyUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
     
-    // 1. 首先尝试直接通过fetch API发送HEAD请求（可能会被CORS阻止）
-    try {
-        fetch(shortLink, {
-            method: 'HEAD',
-            mode: 'cors',
-            redirect: 'manual',
-            cache: 'no-cache'
-        })
-        .then(response => {
-            // 检查是否有重定向响应头
-            if (response.headers.get('Location')) {
-                const redirectUrl = response.headers.get('Location');
-                console.log('通过HEAD请求获取到重定向URL:', redirectUrl);
-                callback(redirectUrl);
-            } else {
-                // 如果没有获取到重定向头，使用备用方案
-                handleFallbackMethod(shortLink, callback);
-            }
-        })
-        .catch(error => {
-            console.warn('fetch请求失败，可能是CORS限制:', error);
-            // 切换到备用方案
+    console.log('发送请求到重定向API:', proxyUrl);
+    
+    fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`请求失败: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.url) {
+            console.log('获取到重定向URL:', data.url);
+            callback(data.url);
+        } else {
+            console.error('响应中没有URL');
             handleFallbackMethod(shortLink, callback);
-        });
-    } catch (e) {
-        console.error('尝试fetch时发生错误:', e);
+        }
+    })
+    .catch(error => {
+        console.error('请求出错:', error.message);
+        // 错误提示简化，适配Cloudflare Pages环境
         handleFallbackMethod(shortLink, callback);
-    }
+    });
 }
 
 // 备用处理方法
