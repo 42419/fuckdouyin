@@ -1,0 +1,1106 @@
+:root {
+    --primary-color: #4F46E5;
+    /* 主色调：深紫蓝 */
+    --hover-color: #3730A3;
+    /* 悬停色 */
+    --bg-header: #ffffff;
+    /* 头部背景 */
+    --bg-menu: #ffffff;
+    /* 菜单背景 */
+    --text-color: #1F2937;
+    /* 主文字色 */
+    --text-light: #6B7280;
+    /* 浅色文字 */
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 6px 16px rgba(0, 0, 0, 0.12);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --max-width: 1200px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f8fafc;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* 头部样式 */
+header {
+    background-color: var(--bg-header);
+    width: 100%;
+    height: 72px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-container {
+    max-width: var(--max-width);
+    height: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* 🍔 汉堡按钮 - 默认隐藏，仅在小屏幕显示 */
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 50%;
+    transition: var(--transition);
+    z-index: 20;
+    /* 增强点击区域，确保整个按钮区域可点击 */
+    position: relative;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 移除默认蓝色框 */
+    outline: none;
+    outline-offset: 0;
+    box-shadow: none;
+    /* 防止iOS点击高亮 */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.menu-toggle svg {
+    width: 26px;
+    height: 26px;
+    fill: var(--text-color);
+    transition: var(--transition);
+    /* 确保SVG不阻止按钮的点击事件 */
+    pointer-events: none;
+    /* 确保SVG图标完全居中 */
+    display: block;
+}
+
+.menu-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-toggle:hover svg {
+    fill: var(--primary-color);
+}
+
+.menu-toggle.active svg {
+    transform: rotate(90deg);
+    fill: var(--primary-color);
+}
+
+/* 移除所有状态下的默认蓝色框 */
+.menu-toggle:focus,
+.menu-toggle:active,
+.menu-toggle:focus-within {
+    outline: none;
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+/* 添加按钮点击时的视觉反馈 */
+.menu-toggle:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+#banner {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    gap: 24px;
+    /* 在所有设备上默认显示，小屏幕设备会在媒体查询中覆盖此设置 */
+}
+
+#banner li {
+    height: 100%;
+}
+
+#banner li a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+    height: 100%;
+    padding: 0 12px;
+    transition: var(--transition);
+    position: relative;
+}
+
+#banner li a:hover {
+    color: var(--primary-color);
+}
+
+#banner li a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background-color: var(--primary-color);
+    transition: var(--transition);
+    border-radius: 3px 3px 0 0;
+}
+
+#banner li a:hover::after {
+    width: 100%;
+}
+
+/* 小屏幕设备 (768px 及以下) - 仅在banner栏无法完整显示时显示汉堡按钮 */
+@media (max-width: 768px) {
+    .header-container {
+        padding: 0 16px;
+    }
+    
+    .logo {
+        font-size: 20px;
+    }
+    
+    .menu-toggle {
+        display: block;
+        /* 增强触摸区域 */
+        min-width: 48px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #banner {
+        position: absolute;
+        top: 72px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background-color: var(--bg-menu);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 24px 16px;
+        gap: 8px;
+        transform: translateY(-20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+            opacity 0.3s ease;
+        z-index: 15;
+        border-radius: 0 0 var(--border-radius) var(--border-radius);
+        margin: 0 16px;
+        height: auto;
+    }
+    
+    #banner.active {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    #banner li {
+        width: 100%;
+        text-align: center;
+        height: auto;
+    }
+    
+    #banner li a {
+        width: 100%;
+        padding: 16px 0;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 10px;
+        box-shadow: none;
+        transform: none;
+        background-color: transparent;
+        border: none;
+        height: auto;
+        /* 移动端触摸优化 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #banner li a:hover {
+        background-color: rgba(79, 70, 229, 0.08);
+        color: var(--primary-color);
+        transform: none;
+        box-shadow: none;
+    }
+    
+    #banner li a:active {
+        transform: scale(0.98);
+    }
+    
+    #banner li a::after {
+        display: none;
+    }
+}
+
+/* 中间屏幕设备 (769px 到 991px) */
+@media (min-width: 769px) and (max-width: 991px) {
+    .menu-toggle {
+        display: none; /* 确保在能完整显示banner栏三个按钮的中间屏幕上隐藏汉堡按钮 */
+    }
+    
+    #banner {
+        position: static; /* 恢复为默认布局 */
+        flex-direction: row;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        background-color: transparent;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        gap: 24px;
+        height: 100%;
+    }
+
+    #banner li {
+        width: auto;
+        text-align: left;
+        height: 100%;
+    }
+
+    #banner li a {
+        width: auto;
+        padding: 0 12px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        background-color: transparent;
+        border: none;
+        height: 100%;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    #banner li a:hover {
+        background-color: transparent;
+        color: var(--primary-color);
+        transform: none;
+        box-shadow: none;
+    }
+
+    #banner li a:hover::after {
+        width: 100%;
+    }
+
+    #banner li a::after {
+        display: block;
+    }
+
+    #banner li a:hover {
+        background-color: rgba(79, 70, 229, 0.08);
+        color: var(--primary-color);
+        transform: none;
+        box-shadow: none;
+    }
+    
+    #banner li a:active {
+        transform: scale(0.98);
+    }
+    
+    #banner li a::after {
+        display: none;
+    }
+    
+    .hero {
+        padding: 60px 0;
+    }
+    
+    .hero-content h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+        line-height: 1.2;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+        margin-bottom: 32px;
+    }
+    
+    .input-group {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .download-btn {
+        width: 100%;
+        padding: 16px;
+        /* 移动端优化 */
+        border-radius: 16px;
+        min-height: 56px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .download-btn:active {
+        transform: translateY(0);
+        background-color: var(--hover-color);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        transition: all 0.1s ease;
+    }
+    
+    #search {
+        /* 移动端优化 */
+        border-radius: 16px;
+        min-height: 56px;
+        padding: 16px 20px;
+    }
+    
+    /* 改进移动端焦点样式 */
+    #search:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    
+    /* 调整移动端输入框文本大小，防止iOS缩放 */
+    input, button {
+        font-size: 16px !important;
+    }
+    
+    .features {
+        flex-direction: column;
+        gap: 24px;
+        margin-bottom: 60px;
+    }
+    
+    .feature {
+        min-width: auto;
+    }
+    
+    main {
+        padding: 0 16px;
+    }
+}
+
+/* 小屏幕手机 (480px 及以下) */
+@media (max-width: 480px) {
+    header {
+        height: 60px;
+    }
+    
+    .header-container {
+        padding: 0 12px;
+    }
+    
+    .menu-toggle {
+        padding: 8px;
+    }
+    
+    .hero {
+        padding: 40px 0;
+    }
+    
+    .hero-content h1 {
+        font-size: 28px;
+        line-height: 1.2;
+        margin-bottom: 16px;
+    }
+    
+    .subtitle {
+        font-size: 16px;
+    }
+    
+    #search {
+        padding: 16px 20px;
+        font-size: 16px;
+        border-radius: 16px;
+        /* 移动端优化：增加输入框高度，更适合触摸 */
+        min-height: 56px;
+    }
+    
+    .download-btn {
+        padding: 16px;
+        font-size: 16px;
+        border-radius: 16px;
+        /* 移动端优化：增加按钮高度和圆角，更适合触摸 */
+        min-height: 56px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        /* 触摸反馈 */
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    
+    .download-btn:active {
+        transform: translateY(0);
+        background-color: var(--hover-color);
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        transition: all 0.1s ease;
+    }
+    
+    main {
+        padding: 0 16px;
+    }
+    
+    /* 改进移动端焦点样式 */
+    #search:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    
+    /* 调整移动端输入框文本大小 */
+    input, button {
+        font-size: 16px !important;
+        /* 防止iOS缩放 */
+    }
+}
+
+/* 大屏幕设备 (1200px 及以上) */
+@media (min-width: 1200px) {
+    .menu-toggle {
+        display: none; /* 确保在大屏幕上隐藏汉堡按钮 */
+    }
+    
+    #banner {
+        position: static; /* 确保默认显示 */
+        flex-direction: row;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        background-color: transparent;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        gap: 32px;
+        height: 100%;
+    }
+    
+    #banner li {
+        width: auto;
+        text-align: left;
+        height: 100%;
+    }
+    
+    #banner li a {
+        width: auto;
+        padding: 12px 22px;
+        font-size: 18px;
+        font-weight: 500;
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        background-color: transparent;
+        border: none;
+        height: 100%;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    #banner li a:hover {
+        background-color: transparent;
+        color: var(--primary-color);
+        transform: none;
+        box-shadow: none;
+    }
+    
+    #banner li a:hover::after {
+        width: 100%;
+    }
+    
+    #banner li a::after {
+        display: block;
+    }
+}
+
+/* 超大屏幕设备 (1400px 及以上) */
+@media (min-width: 1400px) {
+    .menu-toggle {
+        display: none; /* 确保在超大屏幕上隐藏汉堡按钮 */
+    }
+    
+    #banner {
+        position: static; /* 确保默认显示 */
+        flex-direction: row;
+        transform: none;
+        opacity: 1;
+        pointer-events: auto;
+        background-color: transparent;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        gap: 40px;
+        height: 100%;
+    }
+    
+    #banner li {
+        width: auto;
+        text-align: left;
+        height: 100%;
+    }
+    
+    #banner li a {
+        width: auto;
+        padding: 14px 28px;
+        font-size: 18px;
+        font-weight: 500;
+        border-radius: 0;
+        box-shadow: none;
+        transform: none;
+        background-color: transparent;
+        border: none;
+        height: 100%;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    #banner li a:hover {
+        background-color: transparent;
+        color: var(--primary-color);
+        transform: none;
+        box-shadow: none;
+    }
+    
+    #banner li a:hover::after {
+        width: 100%;
+    }
+    
+    #banner li a::after {
+        display: block;
+    }
+}
+
+/* 中等屏幕设备 (992px 到 1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+    .menu-toggle {
+        display: none; /* 确保在中等屏幕上隐藏汉堡按钮 */
+    }
+    
+    #banner {
+        gap: 28px;
+    }
+    
+    #banner li a {
+        padding: 11px 22px;
+        font-size: 17px;
+    }
+}
+
+
+
+/* 搜索框样式 */
+/* 主要内容区域 */
+main {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* 英雄区域 */
+.hero {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    background: linear-gradient(90deg, var(--primary-color), #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 20px;
+    color: var(--text-light);
+    margin-bottom: 48px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.download-form {
+    max-width: 700px;
+    margin: 0 auto 32px;
+}
+
+.input-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+#search {
+    flex: 1;
+    padding: 16px 24px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 16px;
+    transition: var(--transition);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+#search:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.download-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    white-space: nowrap;
+}
+
+.download-btn:hover {
+    background-color: var(--hover-color);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+}
+
+/* 确保点击时按钮不会保持上浮状态 */
+.download-btn:active {
+    transform: translateY(0);
+    background-color: var(--hover-color);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    transition: all 0.1s ease;
+}
+
+/* 特性区域 */
+.features {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 80px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* 特性区域 */
+.features {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 80px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.feature {
+    flex: 1;
+    min-width: 250px;
+    text-align: center;
+    padding: 32px 24px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.feature h3 {
+    margin-bottom: 16px;
+    color: var(--primary-color);
+}
+
+.feature p {
+    color: var(--text-light);
+}
+
+/* 加载状态样式 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.loading-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    font-size: 18px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* 结果展示区域样式 */
+.result-section {
+    max-width: 900px;
+    margin: 0 auto 80px;
+}
+
+.result-container {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.result-container h2 {
+    font-size: 28px;
+    margin-bottom: 24px;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+/* 作者信息卡片样式 */
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px;
+    background-color: #f8fafc;
+    border-radius: var(--border-radius);
+    margin-bottom: 32px;
+}
+
+.author-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.author-details h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.author-details p {
+    color: var(--text-light);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.author-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.author-stats span {
+    background-color: rgba(79, 70, 229, 0.1);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+/* 视频信息样式 */
+.video-info {
+    margin-bottom: 32px;
+    padding: 24px;
+    background-color: #f8fafc;
+    border-radius: var(--border-radius);
+}
+
+.video-info h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: var(--text-color);
+}
+
+.video-info p {
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.video-info p strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* 视频统计数据样式 */
+.video-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary-color);
+}
+
+.stat-label {
+    display: block;
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 视频预览样式 */
+.video-preview {
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.video-preview h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: var(--text-color);
+}
+
+.video-cover {
+    max-width: 100%;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.video-cover:hover {
+    box-shadow: var(--shadow-hover);
+    transform: scale(1.02);
+}
+
+/* 下载选项样式 */
+.download-options {
+    margin-bottom: 16px;
+}
+
+.download-options h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+    color: var(--text-color);
+}
+
+.download-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.download-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    white-space: nowrap;
+}
+
+.download-link:hover {
+    background-color: var(--hover-color);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+    transform: translateY(-2px);
+}
+
+.download-link:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    transition: all 0.1s ease;
+}
+
+/* 错误消息样式 */
+.error-message {
+    text-align: center;
+    padding: 40px 24px;
+    background-color: #fef2f2;
+    border-radius: var(--border-radius);
+    border: 1px solid #fee2e2;
+}
+
+.error-message h3 {
+    color: #dc2626;
+    margin-bottom: 16px;
+    font-size: 24px;
+}
+
+.error-message p {
+    color: #991b1b;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.error-message pre {
+    background-color: #f8fafc;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 14px;
+    color: #4b5563;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .result-container {
+        padding: 24px 16px;
+    }
+    
+    .result-container h2 {
+        font-size: 24px;
+    }
+    
+    .author-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+        padding: 20px 16px;
+    }
+    
+    .author-avatar {
+        width: 64px;
+        height: 64px;
+    }
+    
+    .author-details h3 {
+        font-size: 18px;
+    }
+    
+    .author-stats {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .video-info {
+        padding: 20px 16px;
+    }
+    
+    .video-info h3 {
+        font-size: 18px;
+    }
+    
+    .video-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-item {
+        padding: 16px 12px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
+    }
+    
+    .download-links {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .download-link {
+        padding: 14px 20px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .result-container {
+        padding: 20px 12px;
+    }
+    
+    .result-container h2 {
+        font-size: 22px;
+    }
+    
+    .video-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .author-stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
