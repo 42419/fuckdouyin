@@ -72,6 +72,7 @@
                value="https://v.douyin.com/imHLp4PJ-yc">
         
         <button class="test-button" onclick="testRedirect()">测试Cloudflare Functions</button>
+        <button class="test-button" onclick="testWorkers()">测试Cloudflare Workers</button>
         <button class="test-button" onclick="testSmartRedirect()">测试智能重定向</button>
         <button class="test-button" onclick="testAll()">测试所有方法</button>
         <button class="test-button" onclick="clearResults()">清除结果</button>
@@ -82,12 +83,12 @@
     <div class="test-section">
         <h2>测试说明</h2>
         <ul>
-            <li><strong>Cloudflare Functions测试</strong>：测试服务器端重定向API</li>
+            <li><strong>Cloudflare Functions测试</strong>：测试Pages Functions重定向API</li>
+            <li><strong>Cloudflare Workers测试</strong>：测试独立Workers重定向服务（推荐）</li>
             <li><strong>智能重定向测试</strong>：测试用户友好的重定向引导系统</li>
             <li><strong>所有方法测试</strong>：依次测试所有重定向方案</li>
-            <li><strong>本地环境</strong>：使用Express.js服务器</li>
-            <li><strong>云端环境</strong>：使用Cloudflare Functions</li>
-            <li><strong>智能引导</strong>：提供美观的用户界面和详细的操作指导</li>
+            <li><strong>优先级</strong>：Workers → Functions → 智能引导</li>
+            <li><strong>Workers优势</strong>：独立部署、更高性能、绕过CORS限制</li>
         </ul>
     </div>
 
@@ -293,6 +294,77 @@
                 });
         }
         
+        function testWorkers() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('正在测试Cloudflare Workers...', 'info');
+            
+            const WORKER_ENDPOINT = 'https://redirect-expander.liyunfei.eu.org/expand';
+            const apiUrl = `${WORKER_ENDPOINT}?url=${encodeURIComponent(shortLink)}`;
+            
+            fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            })
+            .then(async response => {
+                console.log('Cloudflare Workers响应状态:', response.status);
+                let data;
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    data = { error: '非JSON响应', raw: text.slice(0, 200) };
+                }
+                return { response, data };
+            })
+            .then(({ response, data }) => {
+                console.log('Cloudflare Workers响应数据:', data);
+                
+                let resultText = `Cloudflare Workers响应状态: ${response.status}\n`;
+                resultText += `响应数据: ${JSON.stringify(data, null, 2)}\n\n`;
+                
+                if (data.success === true && data.url) {
+                    resultText += `✅ Cloudflare Workers重定向成功！\n`;
+                    resultText += `原始链接: ${shortLink}\n`;
+                    resultText += `重定向链接: ${data.url}\n`;
+                    resultText += `使用方法: ${data.method}`;
+                    showResult(resultText, 'success');
+                } else if (data.method === 'user_guidance_needed') {
+                    resultText += `⚠️ Workers检测到需要用户引导\n`;
+                    resultText += `消息: ${data.message || '无'}\n`;
+                    resultText += `建议: 使用智能重定向处理器进行用户引导`;
+                    showResult(resultText, 'info');
+                } else if (data.error) {
+                    resultText += `❌ Workers返回错误: ${data.error}`;
+                    showResult(resultText, 'error');
+                } else {
+                    resultText += `❓ Workers未知响应格式`;
+                    showResult(resultText, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Cloudflare Workers请求错误:', error);
+                let resultText = `❌ Cloudflare Workers请求失败: ${error && error.message ? error.message : String(error)}\n\n`;
+                resultText += `可能的原因:\n`;
+                resultText += `1. Workers服务不可用\n`;
+                resultText += `2. 网络连接问题\n`;
+                resultText += `3. CORS策略限制\n`;
+                resultText += `4. Workers配置错误`;
+                showResult(resultText, 'error');
+            });
+        }
+        
         function testSmartRedirect() {
             const shortLink = document.getElementById('shortLinkInput').value.trim();
             
@@ -329,14 +401,20 @@
             
             showResult('开始测试所有方法...', 'info');
             
-            // 先测试Cloudflare Functions
-            testRedirect();
+            // 先测试Cloudflare Workers（优先级最高）
+            testWorkers();
             
-            // 延迟3秒后测试智能重定向
+            // 延迟2秒后测试Cloudflare Functions
+            setTimeout(() => {
+                showResult('Cloudflare Workers测试完成，开始测试Cloudflare Functions...', 'info');
+                testRedirect();
+            }, 2000);
+            
+            // 延迟4秒后测试智能重定向
             setTimeout(() => {
                 showResult('Cloudflare Functions测试完成，开始测试智能重定向...', 'info');
                 testSmartRedirect();
-            }, 3000);
+            }, 4000);
         }
         
         function clearResults() {

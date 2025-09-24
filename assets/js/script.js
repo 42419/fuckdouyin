@@ -268,19 +268,71 @@ function extractAwemeId(input) {
 }
 
 // 处理抖音短链接的重定向 - 新增函数
-// 处理抖音短链接的重定向 - 智能用户友好版
+// 处理抖音短链接的重定向 - 集成Cloudflare Workers
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('开始智能重定向处理:', shortLink);
     
-    // 检查是否加载了智能重定向处理器
-    if (typeof window.smartRedirectHandler !== 'undefined') {
-        // 使用智能重定向处理器
-        window.smartRedirectHandler.handleRedirect(shortLink, callback);
-    } else {
-        // 备用方案：显示简单的提示
-        console.log('智能重定向处理器未加载，使用备用方案');
-        showSimpleGuidance(shortLink, callback);
-    }
+    // 方法1: 优先使用Cloudflare Workers
+    tryCloudflareWorkers(shortLink, callback);
+}
+
+// 尝试Cloudflare Workers重定向
+function tryCloudflareWorkers(shortLink, callback) {
+    console.log('尝试Cloudflare Workers重定向:', shortLink);
+    
+    const WORKER_ENDPOINT = 'https://redirect-expander.liyunfei.eu.org/expand';
+    const apiUrl = `${WORKER_ENDPOINT}?url=${encodeURIComponent(shortLink)}`;
+    
+    fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit'
+    })
+    .then(response => {
+        console.log('Cloudflare Workers响应状态:', response.status);
+        if (!response.ok) {
+            throw new Error(`Workers请求失败: ${response.status} - ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Cloudflare Workers响应数据:', data);
+        
+        if (data.success === true && data.url) {
+            console.log('Cloudflare Workers成功获取重定向URL:', data.url);
+            callback(data.url);
+        } else if (data.method === 'user_guidance_needed') {
+            console.log('Workers检测到需要用户引导，使用智能重定向处理器');
+            // 使用智能重定向处理器显示用户引导
+            if (typeof window.smartRedirectHandler !== 'undefined') {
+                window.smartRedirectHandler.handleRedirect(shortLink, callback);
+            } else {
+                showSimpleGuidance(shortLink, callback);
+            }
+        } else {
+            console.log('Workers无法处理，尝试智能重定向处理器');
+            // 备用方案：使用智能重定向处理器
+            if (typeof window.smartRedirectHandler !== 'undefined') {
+                window.smartRedirectHandler.handleRedirect(shortLink, callback);
+            } else {
+                showSimpleGuidance(shortLink, callback);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Cloudflare Workers请求出错:', error.message);
+        console.log('Workers不可用，使用智能重定向处理器');
+        // Workers失败，使用智能重定向处理器
+        if (typeof window.smartRedirectHandler !== 'undefined') {
+            window.smartRedirectHandler.handleRedirect(shortLink, callback);
+        } else {
+            showSimpleGuidance(shortLink, callback);
+        }
+    });
 }
 
 // 简单的引导方案（备用）
