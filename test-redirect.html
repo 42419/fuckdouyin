@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重定向API测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>重定向API测试页面</h1>
+    
+    <div class="test-section">
+        <h2>测试抖音短链接重定向</h2>
+        <p>输入抖音短链接，测试重定向API是否正常工作：</p>
+        
+        <input type="text" id="shortLinkInput" class="test-input" 
+               placeholder="输入抖音短链接，例如：https://v.douyin.com/imHLp4PJ-yc"
+               value="https://v.douyin.com/imHLp4PJ-yc">
+        
+        <button class="test-button" onclick="testRedirect()">测试重定向</button>
+        <button class="test-button" onclick="clearResults()">清除结果</button>
+        
+        <div id="testResults"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试说明</h2>
+        <ul>
+            <li><strong>本地测试</strong>：如果使用本地服务器，会调用Express.js的/api/redirect接口</li>
+            <li><strong>Cloudflare测试</strong>：如果部署到Cloudflare Pages，会调用Cloudflare Functions的/api/redirect接口</li>
+            <li><strong>预期结果</strong>：成功获取到重定向后的完整抖音视频URL</li>
+            <li><strong>备用方案</strong>：如果自动重定向失败，会显示手动获取链接的对话框</li>
+        </ul>
+    </div>
+
+    <script>
+        function testRedirect() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('正在测试重定向API...', 'info');
+            
+            // 调用重定向API
+            const proxyUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
+            
+            fetch(proxyUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            })
+            .then(response => {
+                console.log('API响应状态:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('API响应数据:', data);
+                
+                let resultText = `API响应状态: ${response.status}\n`;
+                resultText += `响应数据: ${JSON.stringify(data, null, 2)}\n\n`;
+                
+                if (data.success === true && data.url) {
+                    resultText += `✅ 重定向成功！\n`;
+                    resultText += `原始链接: ${shortLink}\n`;
+                    resultText += `重定向链接: ${data.url}\n`;
+                    resultText += `使用方法: ${data.method}`;
+                    showResult(resultText, 'success');
+                } else if (data.success === false && data.url) {
+                    resultText += `⚠️ 未找到重定向，但返回了URL\n`;
+                    resultText += `返回的URL: ${data.url}\n`;
+                    resultText += `消息: ${data.message || '无'}`;
+                    showResult(resultText, 'info');
+                } else if (data.error) {
+                    resultText += `❌ API返回错误: ${data.error}`;
+                    showResult(resultText, 'error');
+                } else {
+                    resultText += `❓ 未知响应格式`;
+                    showResult(resultText, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('请求错误:', error);
+                let resultText = `❌ 请求失败: ${error.message}\n\n`;
+                resultText += `可能的原因:\n`;
+                resultText += `1. 网络连接问题\n`;
+                resultText += `2. CORS策略限制\n`;
+                resultText += `3. 服务器不可达\n`;
+                resultText += `4. API接口错误`;
+                showResult(resultText, 'error');
+            });
+        }
+        
+        function showResult(text, type) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultElement = document.createElement('div');
+            resultElement.className = `result ${type}`;
+            resultElement.textContent = text;
+            resultsDiv.appendChild(resultElement);
+        }
+        
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+        
+        // 页面加载完成后的提示
+        window.addEventListener('load', function() {
+            console.log('重定向API测试页面已加载');
+            console.log('当前环境:', window.location.hostname);
+            
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                showResult('🔧 检测到本地环境，将使用Express.js服务器', 'info');
+            } else {
+                showResult('☁️ 检测到云端环境，将使用Cloudflare Functions', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

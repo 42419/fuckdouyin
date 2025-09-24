@@ -268,7 +268,7 @@ function extractAwemeId(input) {
 }
 
 // 处理抖音短链接的重定向 - 新增函数
-// 处理抖音短链接的重定向 - 使用Node.js代理
+// 处理抖音短链接的重定向 - 使用Cloudflare Functions代理
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('尝试处理抖音短链接:', shortLink);
     
@@ -280,52 +280,133 @@ function handleShortLinkRedirect(shortLink, callback) {
     fetch(proxyUrl, {
         method: 'GET',
         headers: {
-            'Content-Type': 'application/json'
-        }
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit'
     })
     .then(response => {
+        console.log('重定向API响应状态:', response.status);
         if (!response.ok) {
-            throw new Error(`请求失败: ${response.status}`);
+            throw new Error(`请求失败: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        if (data.url) {
-            console.log('获取到重定向URL:', data.url);
+        console.log('重定向API响应数据:', data);
+        
+        // 检查响应数据结构
+        if (data.success === true && data.url) {
+            console.log('成功获取到重定向URL:', data.url);
             callback(data.url);
+        } else if (data.success === false && data.url) {
+            // 即使没有成功重定向，也尝试使用返回的URL
+            console.log('使用返回的URL（可能未重定向）:', data.url);
+            callback(data.url);
+        } else if (data.error) {
+            console.error('重定向API返回错误:', data.error);
+            handleFallbackMethod(shortLink, callback);
         } else {
-            console.error('响应中没有URL');
+            console.error('响应数据格式异常:', data);
             handleFallbackMethod(shortLink, callback);
         }
     })
     .catch(error => {
         console.error('请求出错:', error.message);
-        // 错误提示简化，适配Cloudflare Pages环境
+        // 提供更详细的错误信息
+        if (error.message.includes('Failed to fetch')) {
+            console.error('网络请求失败，可能是CORS问题或服务器不可达');
+        } else if (error.message.includes('500')) {
+            console.error('服务器内部错误，重定向API可能有问题');
+        }
         handleFallbackMethod(shortLink, callback);
     });
 }
 
-// 备用处理方法
+// 备用处理方法 - 改进版
 function handleFallbackMethod(shortLink, callback) {
     console.log('使用备用方法处理短链接');
     
-    // 2. 显示提示框，引导用户手动打开短链接并复制完整URL
-    const userInput = prompt(
-        '由于抖音的安全限制，无法自动获取完整链接。\n' +
-        '请手动打开以下链接，然后将浏览器地址栏中的完整URL复制粘贴到这里：\n' +
-        shortLink,
-        ''
-    );
+    // 创建一个更友好的对话框
+    const dialogHtml = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                <h3 style="margin-top: 0; color: #333;">需要手动获取完整链接</h3>
+                <p style="color: #666; line-height: 1.5;">
+                    由于抖音的安全限制，无法自动获取完整链接。<br>
+                    请按照以下步骤操作：
+                </p>
+                <ol style="color: #666; line-height: 1.5;">
+                    <li>点击下方按钮打开短链接</li>
+                    <li>等待页面完全加载</li>
+                    <li>复制浏览器地址栏中的完整URL</li>
+                    <li>粘贴到下方输入框中</li>
+                </ol>
+                <div style="margin: 20px 0;">
+                    <a href="${shortLink}" target="_blank" style="display: inline-block; background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+                        打开短链接
+                    </a>
+                </div>
+                <input type="text" id="fullUrlInput" placeholder="请粘贴完整URL到这里..." style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 15px;">
+                <div style="text-align: right;">
+                    <button id="cancelBtn" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">取消</button>
+                    <button id="confirmBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">确认</button>
+                </div>
+            </div>
+        </div>
+    `;
     
-    if (userInput && userInput.trim()) {
-        const fullUrl = userInput.trim();
-        console.log('用户提供的完整URL:', fullUrl);
-        callback(fullUrl);
-    } else {
-        // 用户取消或未输入
-        console.log('用户未提供完整URL');
+    // 创建对话框元素
+    const dialogElement = document.createElement('div');
+    dialogElement.innerHTML = dialogHtml;
+    document.body.appendChild(dialogElement);
+    
+    // 获取对话框中的元素
+    const fullUrlInput = dialogElement.querySelector('#fullUrlInput');
+    const cancelBtn = dialogElement.querySelector('#cancelBtn');
+    const confirmBtn = dialogElement.querySelector('#confirmBtn');
+    
+    // 自动聚焦到输入框
+    setTimeout(() => {
+        fullUrlInput.focus();
+    }, 100);
+    
+    // 处理确认按钮点击
+    confirmBtn.addEventListener('click', () => {
+        const fullUrl = fullUrlInput.value.trim();
+        if (fullUrl) {
+            console.log('用户提供的完整URL:', fullUrl);
+            document.body.removeChild(dialogElement);
+            callback(fullUrl);
+        } else {
+            alert('请输入完整的URL');
+        }
+    });
+    
+    // 处理取消按钮点击
+    cancelBtn.addEventListener('click', () => {
+        console.log('用户取消输入');
+        document.body.removeChild(dialogElement);
         callback(null);
-    }
+    });
+    
+    // 处理ESC键
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            document.body.removeChild(dialogElement);
+            document.removeEventListener('keydown', handleEsc);
+            callback(null);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
+    
+    // 处理输入框回车键
+    fullUrlInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            confirmBtn.click();
+        }
+    });
 }
 
 // 发送API请求获取视频数据 - 适配Douyin_TikTok_Download_API项目
