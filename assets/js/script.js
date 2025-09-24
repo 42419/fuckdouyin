@@ -154,9 +154,73 @@ function handleDownload(element, event, url, filename) {
             tryDirectDownload(url, filename, element, originalText);
         });
     } else {
-        // 生产环境直接下载或使用备用方案
-        console.log('生产环境直接下载');
-        tryDirectDownload(url, filename, element, originalText);
+        // 生产环境使用Cloudflare Functions下载接口
+        const proxyUrl = `/.functions/api/download?url=${encodeURIComponent(url)}`;
+        console.log('使用Cloudflare Functions下载:', proxyUrl);
+        
+        fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*'
+            }
+        })
+        .then(response => {
+            console.log('Cloudflare Functions下载响应状态:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
+            }
+            
+            // 检查响应类型
+            const contentType = response.headers.get('content-type');
+            console.log('响应内容类型:', contentType);
+            
+            // 检查是否是HTML响应（说明代理失败）
+            if (contentType && contentType.includes('text/html')) {
+                throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
+            }
+            
+            return response.blob();
+        })
+        .then(blob => {
+            console.log('下载的blob大小:', blob.size, 'bytes');
+            console.log('blob类型:', blob.type);
+            
+            // 检查blob是否有效
+            if (blob.size === 0) {
+                throw new Error('下载的文件为空');
+            }
+            
+            // 创建下载链接并触发下载
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = filename;
+            
+            // 模拟点击事件
+            document.body.appendChild(link);
+            link.click();
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+                showLoading(false);
+                // 恢复按钮状态
+                element.innerHTML = originalText;
+                element.style.pointerEvents = 'auto';
+                element.style.opacity = '1';
+            }, 100);
+            
+            console.log('下载完成');
+        })
+        .catch(error => {
+            console.error('Cloudflare Functions下载失败:', error.message);
+            
+            // 方法2: 尝试直接下载（备用方案）
+            console.log('尝试直接下载作为备用方案');
+            tryDirectDownload(url, filename, element, originalText);
+        });
     }
 }
     
