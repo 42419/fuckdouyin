@@ -8,18 +8,12 @@
  * @returns {Response} HTTP响应对象
  */
 export async function onRequestGet(request, env, context) {
-  // 设置CORS头
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
-
-  // 处理OPTIONS预检请求
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
 
   try {
     // 从URL查询参数中获取短链接
@@ -68,14 +62,15 @@ export async function onRequestGet(request, env, context) {
           method: 'GET',
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8'
-          },
-          timeout: 8000
+            'Accept': 'application/json'
+          }
         });
         
         if (response.ok) {
-          const data = await response.json();
+          // 某些服务返回text/plain，需要安全解析
+          const text = await response.text();
+          let data;
+          try { data = JSON.parse(text); } catch { data = { url: text }; }
           const expandedUrl = service.parser(data);
           
           if (expandedUrl && expandedUrl !== url) {

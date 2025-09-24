@@ -115,9 +115,16 @@
                 mode: 'cors',
                 credentials: 'omit'
             })
-            .then(response => {
+            .then(async response => {
                 console.log('API响应状态:', response.status);
-                return response.json().then(data => ({ response, data }));
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    const text = await response.text();
+                    data = { error: '非JSON响应', raw: text.slice(0, 200) };
+                }
+                return { response, data };
             })
             .then(({ response, data }) => {
                 console.log('API响应数据:', data);
@@ -146,7 +153,7 @@
             })
             .catch(error => {
                 console.error('请求错误:', error);
-                let resultText = `❌ 请求失败: ${error.message}\n\n`;
+                let resultText = `❌ 请求失败: ${error && error.message ? error.message : String(error)}\n\n`;
                 resultText += `可能的原因:\n`;
                 resultText += `1. 网络连接问题\n`;
                 resultText += `2. CORS策略限制\n`;
@@ -186,9 +193,16 @@
                 mode: 'cors',
                 credentials: 'omit'
             })
-            .then(response => {
+            .then(async response => {
                 console.log('第三方服务API响应状态:', response.status);
-                return response.json().then(data => ({ response, data }));
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    const text = await response.text();
+                    data = { error: '非JSON响应', raw: text.slice(0, 200) };
+                }
+                return { response, data };
             })
             .then(({ response, data }) => {
                 console.log('第三方服务API响应数据:', data);
@@ -218,7 +232,7 @@
             })
             .catch(error => {
                 console.error('第三方服务请求错误:', error);
-                let resultText = `❌ 第三方服务请求失败: ${error.message}\n\n`;
+                let resultText = `❌ 第三方服务请求失败: ${error && error.message ? error.message : String(error)}\n\n`;
                 resultText += `可能的原因:\n`;
                 resultText += `1. 第三方服务不可用\n`;
                 resultText += `2. 网络连接问题\n`;
