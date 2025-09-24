@@ -72,8 +72,7 @@
                value="https://v.douyin.com/imHLp4PJ-yc">
         
         <button class="test-button" onclick="testRedirect()">测试Cloudflare Functions</button>
-        <button class="test-button" onclick="testThirdParty()">测试第三方服务</button>
-        <button class="test-button" onclick="testFrontend()">测试纯前端重定向</button>
+        <button class="test-button" onclick="testSmartRedirect()">测试智能重定向</button>
         <button class="test-button" onclick="testAll()">测试所有方法</button>
         <button class="test-button" onclick="clearResults()">清除结果</button>
         
@@ -84,16 +83,15 @@
         <h2>测试说明</h2>
         <ul>
             <li><strong>Cloudflare Functions测试</strong>：测试服务器端重定向API</li>
-            <li><strong>第三方服务测试</strong>：测试第三方短链接解析服务</li>
-            <li><strong>纯前端重定向测试</strong>：测试浏览器端重定向解析（无服务器依赖）</li>
+            <li><strong>智能重定向测试</strong>：测试用户友好的重定向引导系统</li>
             <li><strong>所有方法测试</strong>：依次测试所有重定向方案</li>
             <li><strong>本地环境</strong>：使用Express.js服务器</li>
             <li><strong>云端环境</strong>：使用Cloudflare Functions</li>
-            <li><strong>备用方案</strong>：如果所有自动方法失败，会显示手动获取链接的对话框</li>
+            <li><strong>智能引导</strong>：提供美观的用户界面和详细的操作指导</li>
         </ul>
     </div>
 
-    <script src="assets/js/frontend-redirect.js"></script>
+    <script src="assets/js/smart-redirect.js"></script>
     <script>
         function testRedirect() {
             const shortLink = document.getElementById('shortLinkInput').value.trim();
@@ -295,6 +293,32 @@
                 });
         }
         
+        function testSmartRedirect() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('正在测试智能重定向系统...', 'info');
+            
+            // 检查是否加载了智能重定向处理器
+            if (typeof window.smartRedirectHandler === 'undefined') {
+                showResult('❌ 智能重定向处理器未加载，请检查smart-redirect.js文件', 'error');
+                return;
+            }
+            
+            // 使用智能重定向处理器
+            window.smartRedirectHandler.handleRedirect(shortLink, (result) => {
+                if (result) {
+                    showResult(`✅ 智能重定向成功！\n获取到URL: ${result}`, 'success');
+                } else {
+                    showResult('❌ 智能重定向被取消或失败', 'error');
+                }
+            });
+        }
+        
         function testAll() {
             const shortLink = document.getElementById('shortLinkInput').value.trim();
             
@@ -308,17 +332,11 @@
             // 先测试Cloudflare Functions
             testRedirect();
             
-            // 延迟2秒后测试第三方服务
+            // 延迟3秒后测试智能重定向
             setTimeout(() => {
-                showResult('Cloudflare Functions测试完成，开始测试第三方服务...', 'info');
-                testThirdParty();
-            }, 2000);
-            
-            // 延迟4秒后测试纯前端重定向
-            setTimeout(() => {
-                showResult('第三方服务测试完成，开始测试纯前端重定向...', 'info');
-                testFrontend();
-            }, 4000);
+                showResult('Cloudflare Functions测试完成，开始测试智能重定向...', 'info');
+                testSmartRedirect();
+            }, 3000);
         }
         
         function clearResults() {

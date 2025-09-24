@@ -1,17 +1,7 @@
-// Cloudflare Functions - 简化且稳健的短链接重定向处理
-
-/**
- * 处理短链接重定向请求
- * @param {Request} request - HTTP请求对象
- * @param {Env} env - 环境变量对象
- * @param {Context} context - 执行上下文
- * @returns {Response} HTTP响应对象
- */
+// Cloudflare Functions - 超简化重定向处理
 export async function onRequestGet(request, env, context) {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json'
   };
 
@@ -22,63 +12,65 @@ export async function onRequestGet(request, env, context) {
     if (!inputUrl) {
       return new Response(JSON.stringify({ error: '缺少URL参数' }), { status: 400, headers: corsHeaders });
     }
-    if (!/^https?:\/\//i.test(inputUrl)) {
-      return new Response(JSON.stringify({ error: '无效的URL格式' }), { status: 400, headers: corsHeaders });
+
+    // 对于抖音短链接，提供用户友好的指导
+    if (inputUrl.includes('v.douyin.com')) {
+      return new Response(JSON.stringify({ 
+        success: false,
+        url: inputUrl,
+        method: 'user_guidance_needed',
+        message: '检测到抖音短链接，请按照指导获取完整URL',
+        guidance: {
+          title: '获取抖音完整链接的方法',
+          steps: [
+            '1. 点击下方按钮打开短链接',
+            '2. 等待页面完全加载',
+            '3. 复制浏览器地址栏中的完整URL',
+            '4. 粘贴到输入框中'
+          ],
+          shortLink: inputUrl,
+          possiblePatterns: [
+            'https://www.douyin.com/video/视频ID',
+            'https://www.douyin.com/aweme/v1/play/?video_id=视频ID',
+            'https://www.douyin.com/share/video/视频ID'
+          ]
+        }
+      }), { headers: corsHeaders });
     }
 
-    // 首选：HEAD + manual，读取 Location
-    let resp = await fetch(inputUrl, {
-      method: 'HEAD',
-      redirect: 'manual',
-      headers: {
-        // 只设置必要UA，避免不被允许的头导致平台错误
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
-    });
-
-    let location = resp.headers.get('location');
-
-    // 备选：GET + manual
-    if (!location && (resp.status < 300 || resp.status >= 400)) {
-      resp = await fetch(inputUrl, {
-        method: 'GET',
+    // 对于其他URL，尝试简单的重定向检测
+    try {
+      const response = await fetch(inputUrl, {
+        method: 'HEAD',
         redirect: 'manual',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': '*/*'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
-      location = resp.headers.get('location');
-    }
 
-    // 如果拿到了Location，规范化为绝对URL
-    if (location) {
-      let finalUrl = location;
-      try {
-        // 处理相对重定向
-        finalUrl = new URL(location, inputUrl).toString();
-      } catch {}
-
-      return new Response(JSON.stringify({ url: finalUrl, success: true, method: 'location_header' }), { headers: corsHeaders });
-    }
-
-    // 最后备选：跟随重定向，读取最终resp.url（不读取body）
-    resp = await fetch(inputUrl, {
-      method: 'GET',
-      redirect: 'follow',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': '*/*'
+      const location = response.headers.get('location');
+      if (location) {
+        return new Response(JSON.stringify({ 
+          url: location, 
+          success: true, 
+          method: 'location_header' 
+        }), { headers: corsHeaders });
       }
-    });
-
-    if (resp.url && resp.url !== inputUrl) {
-      return new Response(JSON.stringify({ url: resp.url, success: true, method: 'follow_redirect' }), { headers: corsHeaders });
+    } catch (error) {
+      // 忽略错误，继续执行
     }
 
-    return new Response(JSON.stringify({ url: inputUrl, success: false, method: 'no_redirect_found' }), { headers: corsHeaders });
+    return new Response(JSON.stringify({ 
+      url: inputUrl, 
+      success: false, 
+      method: 'no_redirect_found',
+      message: '无法自动获取重定向URL'
+    }), { headers: corsHeaders });
+
   } catch (error) {
-    // 确保始终返回JSON，避免平台默认HTML错误页
-    return new Response(JSON.stringify({ error: '代理请求失败: ' + (error && error.message ? error.message : String(error)), success: false }), { status: 500, headers: corsHeaders });
+    return new Response(JSON.stringify({ 
+      error: '请求处理失败: ' + (error && error.message ? error.message : String(error)), 
+      success: false 
+    }), { status: 500, headers: corsHeaders });
   }
 }

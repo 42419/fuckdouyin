@@ -268,84 +268,36 @@ function extractAwemeId(input) {
 }
 
 // 处理抖音短链接的重定向 - 新增函数
-// 处理抖音短链接的重定向 - 增强版多方法重定向
+// 处理抖音短链接的重定向 - 智能用户友好版
 function handleShortLinkRedirect(shortLink, callback) {
-    console.log('尝试处理抖音短链接:', shortLink);
+    console.log('开始智能重定向处理:', shortLink);
     
-    // 方法1: 尝试Cloudflare Functions API
-    const proxyUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
-    console.log('发送请求到Cloudflare Functions API:', proxyUrl);
-    
-    fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'omit'
-    })
-    .then(response => {
-        console.log('Cloudflare Functions API响应状态:', response.status);
-        if (!response.ok) {
-            throw new Error(`请求失败: ${response.status} - ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('Cloudflare Functions API响应数据:', data);
-        
-        // 检查响应数据结构
-        if (data.success === true && data.url) {
-            console.log('Cloudflare Functions API成功获取到重定向URL:', data.url);
-            callback(data.url);
-        } else if (data.success === false && data.url) {
-            // 即使没有成功重定向，也尝试使用返回的URL
-            console.log('Cloudflare Functions API返回URL（可能未重定向）:', data.url);
-            callback(data.url);
-        } else {
-            // Cloudflare Functions API失败，尝试纯前端方案
-            console.log('Cloudflare Functions API失败，尝试纯前端重定向');
-            tryFrontendRedirect(shortLink, callback);
-        }
-    })
-    .catch(error => {
-        console.error('Cloudflare Functions API请求出错:', error.message);
-        // Cloudflare Functions API失败，尝试纯前端方案
-        console.log('Cloudflare Functions API不可用，使用纯前端重定向');
-        tryFrontendRedirect(shortLink, callback);
-    });
+    // 检查是否加载了智能重定向处理器
+    if (typeof window.smartRedirectHandler !== 'undefined') {
+        // 使用智能重定向处理器
+        window.smartRedirectHandler.handleRedirect(shortLink, callback);
+    } else {
+        // 备用方案：显示简单的提示
+        console.log('智能重定向处理器未加载，使用备用方案');
+        showSimpleGuidance(shortLink, callback);
+    }
 }
 
-// 尝试纯前端重定向
-function tryFrontendRedirect(shortLink, callback) {
-    console.log('尝试纯前端重定向解析:', shortLink);
+// 简单的引导方案（备用）
+function showSimpleGuidance(shortLink, callback) {
+    const userInput = prompt(
+        '无法自动解析短链接。\n' +
+        '请手动打开以下链接，然后复制完整URL：\n' +
+        shortLink + '\n\n' +
+        '将完整URL粘贴到下方：',
+        ''
+    );
     
-    // 检查是否加载了前端重定向解析器
-    if (typeof window.frontendRedirectResolver === 'undefined') {
-        console.log('前端重定向解析器未加载，尝试第三方服务');
-        tryThirdPartyServices(shortLink, callback);
-        return;
+    if (userInput && userInput.trim()) {
+        callback(userInput.trim());
+    } else {
+        callback(null);
     }
-    
-    // 使用纯前端重定向解析器
-    window.frontendRedirectResolver.resolveRedirect(shortLink)
-        .then(result => {
-            console.log('纯前端重定向结果:', result);
-            
-            if (result.success) {
-                console.log('纯前端重定向成功:', result.url);
-                callback(result.url);
-            } else {
-                console.log('纯前端重定向失败，尝试第三方服务');
-                tryThirdPartyServices(shortLink, callback);
-            }
-        })
-        .catch(error => {
-            console.error('纯前端重定向出错:', error.message);
-            console.log('纯前端重定向失败，尝试第三方服务');
-            tryThirdPartyServices(shortLink, callback);
-        });
 }
 
 // 尝试第三方服务
