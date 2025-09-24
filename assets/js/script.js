@@ -64,7 +64,7 @@ function setActiveNavItem() {
     });
 }
 
-// 处理前端下载 - 全局函数
+// 处理前端下载 - 增强版
 function handleDownload(element, event, url, filename) {
     event.preventDefault(); // 阻止默认的链接点击行为，避免跳转到预览
     
@@ -77,11 +77,13 @@ function handleDownload(element, event, url, filename) {
     element.style.pointerEvents = 'none'; // 防止重复点击
     element.style.opacity = '0.7'; // 视觉上表示按钮不可用
     
-    // 使用代理服务器下载，避免CORS问题
+    console.log('开始下载视频:', url);
+    console.log('文件名:', filename);
+    
+    // 方法1: 尝试使用代理服务器下载
     const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
     console.log('使用代理下载:', proxyUrl);
     
-    // 使用fetch API通过代理下载
     fetch(proxyUrl, {
         method: 'GET',
         headers: {
@@ -89,12 +91,32 @@ function handleDownload(element, event, url, filename) {
         }
     })
     .then(response => {
+        console.log('代理下载响应状态:', response.status);
+        
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        console.log('响应内容类型:', contentType);
+        
         if (!response.ok) {
-            throw new Error(`下载请求失败: ${response.status}`);
+            throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
         }
+        
+        // 检查是否是HTML响应（说明代理失败）
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
+        }
+        
         return response.blob();
     })
     .then(blob => {
+        console.log('下载的blob大小:', blob.size, 'bytes');
+        console.log('blob类型:', blob.type);
+        
+        // 检查blob是否有效
+        if (blob.size === 0) {
+            throw new Error('下载的文件为空');
+        }
+        
         // 创建下载链接并触发下载
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -115,16 +137,83 @@ function handleDownload(element, event, url, filename) {
             element.style.pointerEvents = 'auto';
             element.style.opacity = '1';
         }, 100);
+        
+        console.log('下载完成');
     })
     .catch(error => {
-        console.error('下载失败:', error);
-        showLoading(false);
-        alert(`下载失败: ${error.message}\n\n请检查服务器是否正在运行，或尝试刷新页面重试。`);
-        // 恢复按钮状态
-        element.innerHTML = originalText;
-        element.style.pointerEvents = 'auto';
-        element.style.opacity = '1';
+        console.error('代理下载失败:', error.message);
+        
+        // 方法2: 尝试直接下载（备用方案）
+        console.log('尝试直接下载作为备用方案');
+        tryDirectDownload(url, filename, element, originalText);
     });
+}
+
+// 直接下载备用方案
+function tryDirectDownload(url, filename, element, originalText) {
+    // 创建直接下载链接
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.target = '_blank';
+    
+    // 添加点击事件
+    link.addEventListener('click', function(e) {
+        // 如果直接下载失败，显示用户指导
+        setTimeout(() => {
+            showDownloadGuidance(url, filename, element, originalText);
+        }, 2000);
+    });
+    
+    // 触发下载
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showLoading(false);
+}
+
+// 显示下载指导
+function showDownloadGuidance(url, filename, element, originalText) {
+    const guidance = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: rgba(0,0,0,0.6); z-index: 10000; 
+                    display: flex; align-items: center; justify-content: center;">
+            <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+                <h3 style="color: #333; margin-top: 0;">📥 下载指导</h3>
+                <p style="color: #666; line-height: 1.5;">
+                    自动下载失败，请尝试以下方法：
+                </p>
+                <ol style="color: #666; line-height: 1.8;">
+                    <li><strong>右键保存</strong>：右键点击下方链接，选择"另存为"</li>
+                    <li><strong>新窗口打开</strong>：点击链接在新窗口打开，然后保存视频</li>
+                    <li><strong>复制链接</strong>：复制链接到下载工具中下载</li>
+                </ol>
+                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <p style="margin: 0; font-size: 12px; color: #666;">视频链接：</p>
+                    <input type="text" value="${url}" readonly 
+                           style="width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 3px; font-size: 12px;">
+                </div>
+                <div style="text-align: center;">
+                    <a href="${url}" target="_blank" 
+                       style="display: inline-block; background: #007bff; color: white; 
+                              padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">
+                        🔗 打开视频链接
+                    </a>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove(); 
+                                     document.querySelector('.download-link').innerHTML = '${originalText}';
+                                     document.querySelector('.download-link').style.pointerEvents = 'auto';
+                                     document.querySelector('.download-link').style.opacity = '1';" 
+                            style="background: #6c757d; color: white; border: none; 
+                                   padding: 10px 20px; border-radius: 5px; margin: 5px; cursor: pointer;">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', guidance);
 }
 
 // 页面加载时的应用逻辑
