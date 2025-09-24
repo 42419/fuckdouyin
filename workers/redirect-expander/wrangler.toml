@@ -2,12 +2,13 @@ name = "redirect-expander"
 main = "src/index.ts"
 compatibility_date = "2024-09-01"
 
-# 添加自定义域名配置
+# 添加workers_dev配置
+workers_dev = false
+
+# 修复路由配置
 routes = [
   { pattern = "redirect-expander.liyunfei.eu.org/*", zone_id = "d8134140088e9f1d999073c920eb26fc" }
 ]
 
 [vars]
 # 可在此添加环境变量
-
-
