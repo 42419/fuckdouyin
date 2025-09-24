@@ -64,9 +64,15 @@ function setActiveNavItem() {
     });
 }
 
-// 处理前端下载 - 增强版
+// 处理前端下载 - 直接下载版
 function handleDownload(element, event, url, filename) {
-    event.preventDefault(); // 阻止默认的链接点击行为，避免跳转到预览
+    event.preventDefault(); // 阻止默认行为
+    
+    // 从按钮元素获取数据属性（确保使用正确的URL和文件名）
+    const actualUrl = element.getAttribute('data-url') || url;
+    const actualFilename = element.getAttribute('data-filename') || filename;
+    const quality = element.getAttribute('data-quality') || '';
+    const size = element.getAttribute('data-size') || 0;
     
     // 显示加载状态
     showLoading(true);
@@ -74,36 +80,40 @@ function handleDownload(element, event, url, filename) {
     // 添加额外的用户提示
     const originalText = element.innerHTML;
     element.innerHTML = '下载中...';
-    element.style.pointerEvents = 'none'; // 防止重复点击
-    element.style.opacity = '0.7'; // 视觉上表示按钮不可用
+    element.style.pointerEvents = 'none';
+    element.style.opacity = '0.7';
     
-    console.log('开始下载视频:', url);
-    console.log('文件名:', filename);
+    console.log('开始下载视频:', actualUrl);
+    console.log('文件名:', actualFilename);
+    console.log('画质:', quality);
+    console.log('大小:', size);
     
     // 方法1: 尝试使用代理服务器下载
-    const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
+    const proxyUrl = `/api/download?url=${encodeURIComponent(actualUrl)}`;
     console.log('使用代理下载:', proxyUrl);
     
     fetch(proxyUrl, {
         method: 'GET',
         headers: {
-            'Accept': '*/*'
+            'Accept': '*/*',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
     })
     .then(response => {
         console.log('代理下载响应状态:', response.status);
-        
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        console.log('响应内容类型:', contentType);
+        console.log('响应头:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
             throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
         }
         
-        // 检查是否是HTML响应（说明代理失败）
+        // 检查响应类型
+        const contentType = response.headers.get('content-type');
+        console.log('响应内容类型:', contentType);
+        
+        // 检查是否是HTML响应
         if (contentType && contentType.includes('text/html')) {
-            throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
+            throw new Error('代理返回了HTML页面，可能视频URL无效');
         }
         
         return response.blob();
@@ -117,26 +127,14 @@ function handleDownload(element, event, url, filename) {
             throw new Error('下载的文件为空');
         }
         
-        // 创建下载链接并触发下载
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
+        // 直接触发下载
+        downloadBlob(blob, actualFilename);
         
-        // 模拟点击事件
-        document.body.appendChild(link);
-        link.click();
-        
-        // 清理
-        setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-            showLoading(false);
-            // 恢复按钮状态
-            element.innerHTML = originalText;
-            element.style.pointerEvents = 'auto';
-            element.style.opacity = '1';
-        }, 100);
+        // 恢复按钮状态
+        showLoading(false);
+        element.innerHTML = originalText;
+        element.style.pointerEvents = 'auto';
+        element.style.opacity = '1';
         
         console.log('下载完成');
     })
@@ -145,8 +143,26 @@ function handleDownload(element, event, url, filename) {
         
         // 方法2: 尝试直接下载（备用方案）
         console.log('尝试直接下载作为备用方案');
-        tryDirectDownload(url, filename, element, originalText);
+        tryDirectDownload(actualUrl, actualFilename, element, originalText);
     });
+}
+
+// 直接下载blob
+function downloadBlob(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    }, 100);
 }
 
 // 直接下载备用方案
@@ -1172,12 +1188,31 @@ function generateDownloadOptions(videoDetail) {
         const displayText = qualityInfo.join(' · ') || '视频';
         const sizeText = option.size ? formatFileSize(option.size) : '未知大小';
         
+        // 添加调试信息
+        console.log(`下载选项 ${index + 1}:`, {
+            url: option.url,
+            quality: option.quality,
+            frameRate: option.frameRate,
+            bitRate: option.bitRate,
+            width: option.width,
+            height: option.height,
+            size: option.size,
+            filename: filename
+        });
+        
         // 添加点击事件处理函数，支持前端下载
         optionsHtml += `
-            <a href="${option.url}" class="download-link" 
-               download="${filename}" onclick="handleDownload(this, event, '${option.url}', '${filename}')">
+            <button class="download-link" 
+                    onclick="handleDownload(this, event, '${option.url}', '${filename}')"
+                    style="display: block; width: 100%; padding: 12px; margin: 5px 0; 
+                           background: #007bff; color: white; border: none; border-radius: 6px; 
+                           cursor: pointer; text-align: left; font-size: 14px;"
+                    data-url="${option.url}" 
+                    data-filename="${filename}"
+                    data-quality="${option.quality || ''}"
+                    data-size="${option.size || 0}">
                 ${index + 1}. ${displayText} (${sizeText})
-            </a>
+            </button>
         `;
     });
     
