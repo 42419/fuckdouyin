@@ -93,6 +93,26 @@ async function handleDownload(element, event) {
         // 使用您的自定义域名作为Cloudflare Worker下载代理
         const workerProxyUrl = `https://redirect-expander.liyunfei.eu.org/download?url=${encodeURIComponent(url)}`;
         
+        // 创建进度条元素
+        const progressContainer = document.createElement('div');
+        progressContainer.className = 'download-progress-container';
+        progressContainer.innerHTML = `
+                <div class="download-progress-bar">
+                    <div class="download-progress-fill"></div>
+                </div>
+                <div class="download-progress-text">0%</div>
+            `;
+        
+        // 将进度条插入到下载按钮下方
+        element.parentNode.appendChild(progressContainer);
+        
+        const progressBar = progressContainer.querySelector('.download-progress-bar');
+        const progressFill = progressContainer.querySelector('.download-progress-fill');
+        const progressText = progressContainer.querySelector('.download-progress-text');
+        
+        // 显示进度条
+        progressContainer.style.display = 'block';
+        
         const response = await fetch(workerProxyUrl, {
             method: 'GET',
             headers: {
@@ -115,7 +135,44 @@ async function handleDownload(element, event) {
             throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
         }
         
-        const blob = await response.blob();
+        // 读取响应体并更新进度
+        const contentLength = response.headers.get('content-length');
+        const total = parseInt(contentLength, 10);
+        let loaded = 0;
+        
+        const reader = response.body.getReader();
+        const chunks = [];
+        
+        // 更新进度的函数
+        const updateProgress = () => {
+            if (total) {
+                const percentage = Math.round((loaded / total) * 100);
+                progressFill.style.width = percentage + '%';
+                progressText.textContent = percentage + '%';
+            } else {
+                // 如果没有content-length，显示加载动画
+                const currentWidth = parseFloat(progressFill.style.width) || 0;
+                progressFill.style.width = ((currentWidth + 5) % 100) + '%';
+                progressText.textContent = '...';
+            }
+        };
+        
+        // 读取数据块
+        while (true) {
+            const { done, value } = await reader.read();
+            
+            if (done) {
+                break;
+            }
+            
+            chunks.push(value);
+            loaded += value.length;
+            updateProgress();
+        }
+        
+        // 合并所有数据块
+        const blob = new Blob(chunks);
+        
         console.log('下载的blob大小:', blob.size, 'bytes');
         console.log('blob类型:', blob.type);
         
@@ -139,6 +196,9 @@ async function handleDownload(element, event) {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(downloadUrl);
             showLoading(false);
+            // 隐藏并移除进度条
+            progressContainer.style.display = 'none';
+            progressContainer.remove();
             // 恢复按钮状态
             element.innerHTML = originalText;
             element.style.pointerEvents = 'auto';
@@ -148,6 +208,13 @@ async function handleDownload(element, event) {
         console.log('下载完成');
     } catch (error) {
         console.error('Worker代理下载失败:', error.message);
+        
+        // 隐藏进度条
+        const progressContainer = element.parentNode.querySelector('.download-progress-container');
+        if (progressContainer) {
+            progressContainer.style.display = 'none';
+            progressContainer.remove();
+        }
         
         // 方法: 尝试直接下载（备用方案）
         console.log('尝试直接下载作为备用方案');
