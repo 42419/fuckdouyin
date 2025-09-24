@@ -44,6 +44,49 @@ app.get('/api/redirect', async (req, res) => {
   }
 });
 
+// 视频下载代理API - 解决CORS问题
+app.get('/api/download', async (req, res) => {
+  try {
+    const { url } = req.query;
+    
+    if (!url) {
+      return res.status(400).json({ error: '缺少URL参数' });
+    }
+    
+    console.log(`代理下载请求: ${url}`);
+    
+    // 设置CORS头
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    
+    // 发送请求到抖音服务器
+    const response = await axios.get(url, {
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.douyin.com/',
+        'Accept': '*/*'
+      },
+      timeout: 30000 // 30秒超时
+    });
+    
+    // 设置响应头
+    res.set({
+      'Content-Type': response.headers['content-type'] || 'video/mp4',
+      'Content-Length': response.headers['content-length'],
+      'Cache-Control': 'no-cache'
+    });
+    
+    // 流式传输数据
+    response.data.pipe(res);
+    
+  } catch (error) {
+    console.error('下载代理错误:', error.message);
+    res.status(500).json({ error: '下载失败: ' + error.message });
+  }
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
