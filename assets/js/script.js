@@ -129,7 +129,7 @@ function handleDownload(element, event) {
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = filename || 'video.mp4';
+        link.download = filename || 'douyin.mp4';
         
         // 模拟点击事件
         document.body.appendChild(link);
@@ -162,7 +162,7 @@ function tryDirectDownload(url, filename, element, originalText) {
     // 创建直接下载链接
     const link = document.createElement('a');
     link.href = url;
-    link.download = filename || 'video.mp4';
+    link.download = filename || 'douyin.mp4';
     link.target = '_blank'; // 在新标签页中打开
     
     // 提示用户保存文件

@@ -96,39 +96,47 @@ export default {
       } 
       // 新增视频下载接口：/download?url=<video_url>
       else if (pathname === '/download') {
-        const videoUrl = searchParams.get('url');
-        if (!videoUrl) {
-          return json({ error: '缺少视频URL参数' }, 400);
+        const target = searchParams.get("url");
+
+        if (!target) {
+          return new Response("请提供视频直链，例如：/download?url=https://www.douyin.com/aweme/v1/play/?...", {
+            status: 400,
+            headers: {
+              'access-control-allow-origin': '*'
+            }
+          });
         }
 
-        // 获取视频内容
-        const response = await fetch(videoUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Referer': 'https://www.douyin.com/',
-            'Accept': '*/*'
-          }
-        });
+        try {
+          // 请求抖音直链，允许跟随跳转
+          const resp = await fetch(target, {
+            redirect: "follow",
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Referer": "https://www.douyin.com/"
+            },
+          });
 
-        if (!response.ok) {
-          return json({ error: `视频请求失败: ${response.status} - ${response.statusText}` }, 500);
+          // 获取文件流
+          const headers = new Headers(resp.headers);
+
+          // 强制下载而不是在线播放
+          headers.set("Content-Disposition", 'attachment; filename="douyin.mp4"');
+          headers.set("Content-Type", "video/mp4");
+          headers.set("Access-Control-Allow-Origin", "*");
+
+          return new Response(resp.body, { 
+            status: 200, 
+            headers 
+          });
+        } catch (e: any) {
+          return new Response("下载失败: " + e.toString(), { 
+            status: 500,
+            headers: {
+              'access-control-allow-origin': '*'
+            }
+          });
         }
-
-        // 获取视频数据和相关信息
-        const videoData = await response.arrayBuffer();
-        const contentType = response.headers.get('content-type') || 'video/mp4';
-        
-        // 返回视频数据
-        return new Response(videoData, {
-          status: 200,
-          headers: {
-            'Content-Type': contentType,
-            'Content-Length': videoData.byteLength.toString(),
-            'Access-Control-Allow-Origin': '*',
-            'Cache-Control': 'no-cache'
-          }
-        });
       } 
       // 根路径返回欢迎信息
       else if (pathname === '/') {
