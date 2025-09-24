@@ -1,0 +1,13 @@
+name = "redirect-expander"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+
+# 可选：自定义路由（如果绑定到自有域名）
+# routes = [
+#   { pattern = "expand.example.com/*", zone_id = "<your-zone-id>" }
+# ]
+
+[vars]
+# 可在此添加环境变量
+
+
