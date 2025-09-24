@@ -71,99 +71,20 @@ function handleDownload(element, event, url, filename) {
     
     console.log(`开始下载: ${filename}，URL: ${url}`);
     
-    // 显示加载状态
-    showLoading(true);
+    // 直接引导用户在新窗口打开链接
+    // 这是处理跨域视频下载的最可靠方式
+    const newWindow = window.open(url, '_blank');
     
-    // 添加额外的用户提示
-    const originalText = element.innerHTML;
-    element.innerHTML = '下载中...';
-    element.style.pointerEvents = 'none'; // 防止重复点击
-    element.style.opacity = '0.7'; // 视觉上表示按钮不可用
+    if (!newWindow) {
+        // 如果浏览器阻止了弹窗，则提供手动操作指导
+        alert('请在新窗口中打开以下链接，然后右键点击视频选择"另存为"来保存视频:\n\n' + url);
+    } else {
+        // 提示用户如何保存视频
+        alert('视频已在新窗口中打开，请右键点击视频并选择"另存为"来保存视频');
+    }
     
-    // 直接使用fetch下载视频文件
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': '*/*'
-        }
-    })
-    .then(response => {
-        console.log('直接下载响应状态:', response.status);
-        
-        if (!response.ok) {
-            throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
-        }
-        
-        return response.blob();
-    })
-    .then(blob => {
-        console.log('下载的blob大小:', blob.size, 'bytes');
-        console.log('blob类型:', blob.type);
-        
-        // 检查blob是否有效
-        if (blob.size === 0) {
-            throw new Error('下载的文件为空');
-        }
-        
-        // 创建下载链接并触发下载
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = filename;
-        
-        // 模拟点击事件
-        document.body.appendChild(link);
-        link.click();
-        
-        // 清理
-        setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-            showLoading(false);
-            // 恢复按钮状态
-            element.innerHTML = originalText;
-            element.style.pointerEvents = 'auto';
-            element.style.opacity = '1';
-        }, 100);
-        
-        console.log('下载完成');
-    })
-    .catch(error => {
-        console.error('直接下载失败:', error.message);
-        
-        // 方法: 尝试直接下载（备用方案）
-        console.log('尝试直接下载作为备用方案');
-        tryDirectDownload(url, filename, element, originalText);
-    });
-}
-
-// 直接下载备用方案
-function tryDirectDownload(url, filename, element, originalText) {
-    // 创建直接下载链接
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.target = '_blank'; // 在新标签页中打开
-    
-    // 提示用户保存文件
-    alert('请点击"确定"后，在新打开的页面中右键点击视频并选择"另存为"来保存视频');
-    
-    // 模拟点击事件
-    document.body.appendChild(link);
-    link.click();
-    
-    // 清理
-    setTimeout(() => {
-        document.body.removeChild(link);
-        showLoading(false);
-        // 恢复按钮状态
-        element.innerHTML = originalText;
-        element.style.pointerEvents = 'auto';
-        element.style.opacity = '1';
-        
-        // 显示下载指导
-        showDownloadGuidance(url, filename, element, originalText);
-    }, 100);
+    // 显示下载指导弹窗
+    showDownloadGuidance(url, filename, element, element.innerHTML);
 }
 
 // 显示下载指导
