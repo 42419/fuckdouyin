@@ -69,13 +69,7 @@ function setActiveNavItem() {
 function handleDownload(element, event, url, filename) {
     event.preventDefault(); // 阻止默认的链接点击行为
     
-    // 从按钮元素获取数据属性（确保使用正确的URL和文件名）
-    const actualUrl = element.getAttribute('data-url') || url;
-    const actualFilename = element.getAttribute('data-filename') || filename;
-    const quality = element.getAttribute('data-quality') || '';
-    const size = element.getAttribute('data-size') || 0;
-    
-    console.log(`开始下载: ${actualFilename}，URL: ${actualUrl}`);
+    console.log(`开始下载: ${filename}，URL: ${url}`);
     
     // 显示加载状态
     showLoading(true);
@@ -86,73 +80,84 @@ function handleDownload(element, event, url, filename) {
     element.style.pointerEvents = 'none'; // 防止重复点击
     element.style.opacity = '0.7'; // 视觉上表示按钮不可用
     
-    // 尝试使用代理服务器下载
-    const proxyUrl = `/api/download?url=${encodeURIComponent(actualUrl)}`;
-    console.log('使用代理下载:', proxyUrl);
+    // 检查是否在本地环境运行
+    const isLocal = window.location.hostname === 'localhost' || 
+                  window.location.hostname === '127.0.0.1' || 
+                  window.location.hostname === '0.0.0.0';
     
-    fetch(proxyUrl, {
-        method: 'GET',
-        headers: {
-            'Accept': '*/*'
-        }
-    })
-    .then(response => {
-        console.log('代理下载响应状态:', response.status);
+    if (isLocal) {
+        // 本地环境使用代理服务器下载
+        const proxyUrl = `/api/download?url=${encodeURIComponent(url)}`;
+        console.log('使用代理下载:', proxyUrl);
         
-        if (!response.ok) {
-            throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
-        }
-        
-        // 检查响应类型
-        const contentType = response.headers.get('content-type');
-        console.log('响应内容类型:', contentType);
-        
-        // 检查是否是HTML响应（说明代理失败）
-        if (contentType && contentType.includes('text/html')) {
-            throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
-        }
-        
-        return response.blob();
-    })
-    .then(blob => {
-        console.log('下载的blob大小:', blob.size, 'bytes');
-        console.log('blob类型:', blob.type);
-        
-        // 检查blob是否有效
-        if (blob.size === 0) {
-            throw new Error('下载的文件为空');
-        }
-        
-        // 创建下载链接并触发下载
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = actualFilename;
-        
-        // 模拟点击事件
-        document.body.appendChild(link);
-        link.click();
-        
-        // 清理
-        setTimeout(() => {
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(downloadUrl);
-            showLoading(false);
-            // 恢复按钮状态
-            element.innerHTML = originalText;
-            element.style.pointerEvents = 'auto';
-            element.style.opacity = '1';
-        }, 100);
-        
-        console.log('下载完成');
-    })
-    .catch(error => {
-        console.error('代理下载失败:', error.message);
-        
-        // 方法2: 尝试直接下载（备用方案）
-        console.log('尝试直接下载作为备用方案');
-        tryDirectDownload(actualUrl, actualFilename, element, originalText);
-    });
+        fetch(proxyUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*'
+            }
+        })
+        .then(response => {
+            console.log('代理下载响应状态:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
+            }
+            
+            // 检查响应类型
+            const contentType = response.headers.get('content-type');
+            console.log('响应内容类型:', contentType);
+            
+            // 检查是否是HTML响应（说明代理失败）
+            if (contentType && contentType.includes('text/html')) {
+                throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
+            }
+            
+            return response.blob();
+        })
+        .then(blob => {
+            console.log('下载的blob大小:', blob.size, 'bytes');
+            console.log('blob类型:', blob.type);
+            
+            // 检查blob是否有效
+            if (blob.size === 0) {
+                throw new Error('下载的文件为空');
+            }
+            
+            // 创建下载链接并触发下载
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = filename;
+            
+            // 模拟点击事件
+            document.body.appendChild(link);
+            link.click();
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+                showLoading(false);
+                // 恢复按钮状态
+                element.innerHTML = originalText;
+                element.style.pointerEvents = 'auto';
+                element.style.opacity = '1';
+            }, 100);
+            
+            console.log('下载完成');
+        })
+        .catch(error => {
+            console.error('代理下载失败:', error.message);
+            
+            // 方法2: 尝试直接下载（备用方案）
+            console.log('尝试直接下载作为备用方案');
+            tryDirectDownload(url, filename, element, originalText);
+        });
+    } else {
+        // 生产环境直接下载或使用备用方案
+        console.log('生产环境直接下载');
+        tryDirectDownload(url, filename, element, originalText);
+    }
 }
     
 // 直接下载备用方案
