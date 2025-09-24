@@ -71,8 +71,9 @@
                placeholder="输入抖音短链接，例如：https://v.douyin.com/imHLp4PJ-yc"
                value="https://v.douyin.com/imHLp4PJ-yc">
         
-        <button class="test-button" onclick="testRedirect()">测试主要API</button>
+        <button class="test-button" onclick="testRedirect()">测试Cloudflare Functions</button>
         <button class="test-button" onclick="testThirdParty()">测试第三方服务</button>
+        <button class="test-button" onclick="testFrontend()">测试纯前端重定向</button>
         <button class="test-button" onclick="testAll()">测试所有方法</button>
         <button class="test-button" onclick="clearResults()">清除结果</button>
         
@@ -82,15 +83,17 @@
     <div class="test-section">
         <h2>测试说明</h2>
         <ul>
-            <li><strong>主要API测试</strong>：测试增强版重定向API（6种方法）</li>
+            <li><strong>Cloudflare Functions测试</strong>：测试服务器端重定向API</li>
             <li><strong>第三方服务测试</strong>：测试第三方短链接解析服务</li>
-            <li><strong>所有方法测试</strong>：依次测试主要API和第三方服务</li>
+            <li><strong>纯前端重定向测试</strong>：测试浏览器端重定向解析（无服务器依赖）</li>
+            <li><strong>所有方法测试</strong>：依次测试所有重定向方案</li>
             <li><strong>本地环境</strong>：使用Express.js服务器</li>
             <li><strong>云端环境</strong>：使用Cloudflare Functions</li>
             <li><strong>备用方案</strong>：如果所有自动方法失败，会显示手动获取链接的对话框</li>
         </ul>
     </div>
 
+    <script src="assets/js/frontend-redirect.js"></script>
     <script>
         function testRedirect() {
             const shortLink = document.getElementById('shortLinkInput').value.trim();
@@ -118,10 +121,10 @@
             .then(async response => {
                 console.log('API响应状态:', response.status);
                 let data;
+                const text = await response.text();
                 try {
-                    data = await response.json();
+                    data = JSON.parse(text);
                 } catch (e) {
-                    const text = await response.text();
                     data = { error: '非JSON响应', raw: text.slice(0, 200) };
                 }
                 return { response, data };
@@ -196,10 +199,10 @@
             .then(async response => {
                 console.log('第三方服务API响应状态:', response.status);
                 let data;
+                const text = await response.text();
                 try {
-                    data = await response.json();
+                    data = JSON.parse(text);
                 } catch (e) {
-                    const text = await response.text();
                     data = { error: '非JSON响应', raw: text.slice(0, 200) };
                 }
                 return { response, data };
@@ -242,6 +245,56 @@
             });
         }
         
+        function testFrontend() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('正在测试纯前端重定向...', 'info');
+            
+            // 检查是否加载了前端重定向解析器
+            if (typeof window.frontendRedirectResolver === 'undefined') {
+                showResult('❌ 前端重定向解析器未加载，请检查frontend-redirect.js文件', 'error');
+                return;
+            }
+            
+            // 使用纯前端重定向解析器
+            window.frontendRedirectResolver.resolveRedirect(shortLink)
+                .then(result => {
+                    console.log('纯前端重定向结果:', result);
+                    
+                    let resultText = `纯前端重定向结果:\n`;
+                    resultText += `响应数据: ${JSON.stringify(result, null, 2)}\n\n`;
+                    
+                    if (result.success) {
+                        resultText += `✅ 纯前端重定向成功！\n`;
+                        resultText += `原始链接: ${shortLink}\n`;
+                        resultText += `重定向链接: ${result.url}\n`;
+                        resultText += `使用方法: ${result.method}`;
+                        showResult(resultText, 'success');
+                    } else {
+                        resultText += `❌ 纯前端重定向失败\n`;
+                        resultText += `返回的URL: ${result.url}\n`;
+                        resultText += `失败原因: ${result.method}`;
+                        showResult(resultText, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('纯前端重定向错误:', error);
+                    let resultText = `❌ 纯前端重定向请求失败: ${error && error.message ? error.message : String(error)}\n\n`;
+                    resultText += `可能的原因:\n`;
+                    resultText += `1. CORS策略限制\n`;
+                    resultText += `2. 网络连接问题\n`;
+                    resultText += `3. 目标网站阻止请求\n`;
+                    resultText += `4. 浏览器安全策略`;
+                    showResult(resultText, 'error');
+                });
+        }
+        
         function testAll() {
             const shortLink = document.getElementById('shortLinkInput').value.trim();
             
@@ -252,14 +305,20 @@
             
             showResult('开始测试所有方法...', 'info');
             
-            // 先测试主要API
+            // 先测试Cloudflare Functions
             testRedirect();
             
             // 延迟2秒后测试第三方服务
             setTimeout(() => {
-                showResult('主要API测试完成，开始测试第三方服务...', 'info');
+                showResult('Cloudflare Functions测试完成，开始测试第三方服务...', 'info');
                 testThirdParty();
             }, 2000);
+            
+            // 延迟4秒后测试纯前端重定向
+            setTimeout(() => {
+                showResult('第三方服务测试完成，开始测试纯前端重定向...', 'info');
+                testFrontend();
+            }, 4000);
         }
         
         function clearResults() {

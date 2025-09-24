@@ -272,9 +272,9 @@ function extractAwemeId(input) {
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('尝试处理抖音短链接:', shortLink);
     
-    // 方法1: 使用主要重定向API
+    // 方法1: 尝试Cloudflare Functions API
     const proxyUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
-    console.log('发送请求到主要重定向API:', proxyUrl);
+    console.log('发送请求到Cloudflare Functions API:', proxyUrl);
     
     fetch(proxyUrl, {
         method: 'GET',
@@ -286,34 +286,66 @@ function handleShortLinkRedirect(shortLink, callback) {
         credentials: 'omit'
     })
     .then(response => {
-        console.log('主要重定向API响应状态:', response.status);
+        console.log('Cloudflare Functions API响应状态:', response.status);
         if (!response.ok) {
             throw new Error(`请求失败: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('主要重定向API响应数据:', data);
+        console.log('Cloudflare Functions API响应数据:', data);
         
         // 检查响应数据结构
         if (data.success === true && data.url) {
-            console.log('主要API成功获取到重定向URL:', data.url);
+            console.log('Cloudflare Functions API成功获取到重定向URL:', data.url);
             callback(data.url);
         } else if (data.success === false && data.url) {
             // 即使没有成功重定向，也尝试使用返回的URL
-            console.log('主要API返回URL（可能未重定向）:', data.url);
+            console.log('Cloudflare Functions API返回URL（可能未重定向）:', data.url);
             callback(data.url);
         } else {
-            // 主要API失败，尝试第三方服务
-            console.log('主要API失败，尝试第三方服务');
-            tryThirdPartyServices(shortLink, callback);
+            // Cloudflare Functions API失败，尝试纯前端方案
+            console.log('Cloudflare Functions API失败，尝试纯前端重定向');
+            tryFrontendRedirect(shortLink, callback);
         }
     })
     .catch(error => {
-        console.error('主要API请求出错:', error.message);
-        // 主要API失败，尝试第三方服务
-        tryThirdPartyServices(shortLink, callback);
+        console.error('Cloudflare Functions API请求出错:', error.message);
+        // Cloudflare Functions API失败，尝试纯前端方案
+        console.log('Cloudflare Functions API不可用，使用纯前端重定向');
+        tryFrontendRedirect(shortLink, callback);
     });
+}
+
+// 尝试纯前端重定向
+function tryFrontendRedirect(shortLink, callback) {
+    console.log('尝试纯前端重定向解析:', shortLink);
+    
+    // 检查是否加载了前端重定向解析器
+    if (typeof window.frontendRedirectResolver === 'undefined') {
+        console.log('前端重定向解析器未加载，尝试第三方服务');
+        tryThirdPartyServices(shortLink, callback);
+        return;
+    }
+    
+    // 使用纯前端重定向解析器
+    window.frontendRedirectResolver.resolveRedirect(shortLink)
+        .then(result => {
+            console.log('纯前端重定向结果:', result);
+            
+            if (result.success) {
+                console.log('纯前端重定向成功:', result.url);
+                callback(result.url);
+            } else {
+                console.log('纯前端重定向失败，尝试第三方服务');
+                tryThirdPartyServices(shortLink, callback);
+            }
+        })
+        .catch(error => {
+            console.error('纯前端重定向出错:', error.message);
+            console.log('纯前端重定向失败，尝试第三方服务');
+            tryThirdPartyServices(shortLink, callback);
+        });
 }
 
 // 尝试第三方服务
