@@ -80,9 +80,8 @@ function handleDownload(element, event, url, filename) {
     element.style.pointerEvents = 'none'; // 防止重复点击
     element.style.opacity = '0.7'; // 视觉上表示按钮不可用
     
-    // 使用Cloudflare Worker作为下载代理
-    // 假设Worker部署在 https://redirect-expander.[你的workers.dev子域名]/download
-    const workerProxyUrl = `https://redirect-expander.liyunfei.workers.dev/download?url=${encodeURIComponent(url)}`;
+    // 使用您的自定义域名作为Cloudflare Worker下载代理
+    const workerProxyUrl = `https://redirect-expander.liyunfei.eu.org/download?url=${encodeURIComponent(url)}`;
     
     fetch(workerProxyUrl, {
         method: 'GET',
