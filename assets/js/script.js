@@ -66,8 +66,17 @@ function setActiveNavItem() {
 
 // 处理前端下载 - 直接下载版
 // 增强的前端下载处理函数
-function handleDownload(element, event, url, filename) {
+function handleDownload(element, event) {
     event.preventDefault(); // 阻止默认的链接点击行为
+    
+    // 从data属性获取URL和文件名，避免直接使用href
+    const url = element.getAttribute('data-url');
+    const filename = element.getAttribute('data-filename');
+    
+    if (!url) {
+        alert('下载链接无效，请稍后再试');
+        return;
+    }
     
     console.log(`开始下载: ${filename}，URL: ${url}`);
     
@@ -120,7 +129,7 @@ function handleDownload(element, event, url, filename) {
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = filename;
+        link.download = filename || 'video.mp4';
         
         // 模拟点击事件
         document.body.appendChild(link);
@@ -146,6 +155,35 @@ function handleDownload(element, event, url, filename) {
         console.log('尝试直接下载作为备用方案');
         tryDirectDownload(url, filename, element, originalText);
     });
+}
+
+// 直接下载备用方案
+function tryDirectDownload(url, filename, element, originalText) {
+    // 创建直接下载链接
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'video.mp4';
+    link.target = '_blank'; // 在新标签页中打开
+    
+    // 提示用户保存文件
+    alert('请点击"确定"后，在新打开的页面中右键点击视频并选择"另存为"来保存视频');
+    
+    // 模拟点击事件
+    document.body.appendChild(link);
+    link.click();
+    
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(link);
+        showLoading(false);
+        // 恢复按钮状态
+        element.innerHTML = originalText;
+        element.style.pointerEvents = 'auto';
+        element.style.opacity = '1';
+        
+        // 显示下载指导
+        showDownloadGuidance(url, filename, element, originalText);
+    }, 100);
 }
 
 // 显示下载指导
