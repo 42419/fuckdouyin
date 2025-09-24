@@ -65,8 +65,9 @@ function setActiveNavItem() {
 }
 
 // 处理前端下载 - 直接下载版
+// 增强的前端下载处理函数
 function handleDownload(element, event, url, filename) {
-    event.preventDefault(); // 阻止默认行为
+    event.preventDefault(); // 阻止默认的链接点击行为
     
     // 从按钮元素获取数据属性（确保使用正确的URL和文件名）
     const actualUrl = element.getAttribute('data-url') || url;
@@ -74,34 +75,29 @@ function handleDownload(element, event, url, filename) {
     const quality = element.getAttribute('data-quality') || '';
     const size = element.getAttribute('data-size') || 0;
     
+    console.log(`开始下载: ${actualFilename}，URL: ${actualUrl}`);
+    
     // 显示加载状态
     showLoading(true);
     
     // 添加额外的用户提示
     const originalText = element.innerHTML;
     element.innerHTML = '下载中...';
-    element.style.pointerEvents = 'none';
-    element.style.opacity = '0.7';
+    element.style.pointerEvents = 'none'; // 防止重复点击
+    element.style.opacity = '0.7'; // 视觉上表示按钮不可用
     
-    console.log('开始下载视频:', actualUrl);
-    console.log('文件名:', actualFilename);
-    console.log('画质:', quality);
-    console.log('大小:', size);
-    
-    // 方法1: 尝试使用代理服务器下载
+    // 尝试使用代理服务器下载
     const proxyUrl = `/api/download?url=${encodeURIComponent(actualUrl)}`;
     console.log('使用代理下载:', proxyUrl);
     
     fetch(proxyUrl, {
         method: 'GET',
         headers: {
-            'Accept': '*/*',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'Accept': '*/*'
         }
     })
     .then(response => {
         console.log('代理下载响应状态:', response.status);
-        console.log('响应头:', Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
             throw new Error(`下载请求失败: ${response.status} - ${response.statusText}`);
@@ -111,9 +107,9 @@ function handleDownload(element, event, url, filename) {
         const contentType = response.headers.get('content-type');
         console.log('响应内容类型:', contentType);
         
-        // 检查是否是HTML响应
+        // 检查是否是HTML响应（说明代理失败）
         if (contentType && contentType.includes('text/html')) {
-            throw new Error('代理返回了HTML页面，可能视频URL无效');
+            throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
         }
         
         return response.blob();
@@ -127,14 +123,26 @@ function handleDownload(element, event, url, filename) {
             throw new Error('下载的文件为空');
         }
         
-        // 直接触发下载
-        downloadBlob(blob, actualFilename);
+        // 创建下载链接并触发下载
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = actualFilename;
         
-        // 恢复按钮状态
-        showLoading(false);
-        element.innerHTML = originalText;
-        element.style.pointerEvents = 'auto';
-        element.style.opacity = '1';
+        // 模拟点击事件
+        document.body.appendChild(link);
+        link.click();
+        
+        // 清理
+        setTimeout(() => {
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(downloadUrl);
+            showLoading(false);
+            // 恢复按钮状态
+            element.innerHTML = originalText;
+            element.style.pointerEvents = 'auto';
+            element.style.opacity = '1';
+        }, 100);
         
         console.log('下载完成');
     })
@@ -146,53 +154,40 @@ function handleDownload(element, event, url, filename) {
         tryDirectDownload(actualUrl, actualFilename, element, originalText);
     });
 }
-
-// 直接下载blob
-function downloadBlob(blob, filename) {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.style.display = 'none';
     
-    document.body.appendChild(link);
-    link.click();
-    
-    // 清理
-    setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    }, 100);
-}
-
 // 直接下载备用方案
 function tryDirectDownload(url, filename, element, originalText) {
     // 创建直接下载链接
     const link = document.createElement('a');
     link.href = url;
     link.download = filename;
-    link.target = '_blank';
+    link.target = '_blank'; // 在新标签页中打开
     
-    // 添加点击事件
-    link.addEventListener('click', function(e) {
-        // 如果直接下载失败，显示用户指导
-        setTimeout(() => {
-            showDownloadGuidance(url, filename, element, originalText);
-        }, 2000);
-    });
+    // 提示用户保存文件
+    alert('请点击"确定"后，在新打开的页面中右键点击视频并选择"另存为"来保存视频');
     
-    // 触发下载
+    // 模拟点击事件
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
     
-    showLoading(false);
+    // 清理
+    setTimeout(() => {
+        document.body.removeChild(link);
+        showLoading(false);
+        // 恢复按钮状态
+        element.innerHTML = originalText;
+        element.style.pointerEvents = 'auto';
+        element.style.opacity = '1';
+        
+        // 显示下载指导
+        showDownloadGuidance(url, filename, element, originalText);
+    }, 100);
 }
 
 // 显示下载指导
 function showDownloadGuidance(url, filename, element, originalText) {
     const guidance = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        <div id="downloadGuidanceModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
                     background: rgba(0,0,0,0.6); z-index: 10000; 
                     display: flex; align-items: center; justify-content: center;">
             <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
@@ -216,10 +211,7 @@ function showDownloadGuidance(url, filename, element, originalText) {
                               padding: 10px 20px; text-decoration: none; border-radius: 5px; margin: 5px;">
                         🔗 打开视频链接
                     </a>
-                    <button onclick="this.parentElement.parentElement.parentElement.remove(); 
-                                     document.querySelector('.download-link').innerHTML = '${originalText}';
-                                     document.querySelector('.download-link').style.pointerEvents = 'auto';
-                                     document.querySelector('.download-link').style.opacity = '1';" 
+                    <button id="closeGuidanceBtn" 
                             style="background: #6c757d; color: white; border: none; 
                                    padding: 10px 20px; border-radius: 5px; margin: 5px; cursor: pointer;">
                         关闭
@@ -230,7 +222,34 @@ function showDownloadGuidance(url, filename, element, originalText) {
     `;
     
     document.body.insertAdjacentHTML('beforeend', guidance);
+    
+    // 添加关闭按钮事件监听器
+    const closeBtn = document.getElementById('closeGuidanceBtn');
+    const modal = document.getElementById('downloadGuidanceModal');
+    
+    const closeModal = () => {
+        if (modal && modal.parentElement) {
+            modal.parentElement.removeChild(modal);
+        }
+        if (element) {
+            element.innerHTML = originalText;
+            element.style.pointerEvents = 'auto';
+            element.style.opacity = '1';
+        }
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    
+    // 处理ESC键关闭
+    const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEsc);
+        }
+    };
+    document.addEventListener('keydown', handleEsc);
 }
+// 此函数已定义过，无需重复定义
 
 // 页面加载时的应用逻辑
 document.addEventListener('DOMContentLoaded', function() {
@@ -953,6 +972,7 @@ function generateDownloadOptions(videoDetail) {
                         const option = {
                             url: priorityUrl,
                             quality: getResolutionTag(height, width),
+                            resolution: `${width}x${height}`, // 添加resolution属性
                             size: playAddr.data_size || bitRate.size,
                             frameRate: fps,
                             bitRate: bitRate.bit_rate,
@@ -991,6 +1011,7 @@ function generateDownloadOptions(videoDetail) {
                     options.push({
                         url: priorityUrl,
                         quality: qualityLabel,
+                        resolution: `${source.width || (videoDetail.width || (videoDetail.video && videoDetail.video.width))}x${source.height || (videoDetail.height || (videoDetail.video && videoDetail.video.height))}`, // 添加resolution属性
                         size: source.data_size,
                         frameRate: extractFrameRate(videoDetail),
                         bitRate: videoDetail.bit_rate || (videoDetail.video && videoDetail.video.bit_rate),
@@ -1156,66 +1177,48 @@ function generateDownloadOptions(videoDetail) {
     // 生成下载选项HTML
     let optionsHtml = '<div class="download-links">';
     
-    downloadOptions.forEach((option, index) => {
-        // 生成文件名
-        const filename = generateFilename(videoDetail, option, option.frameRate || videoFPS);
-        
-        // 构建画质和帧率信息，只显示存在的值
-        let qualityInfo = [];
-        
+    const downloadLinks = downloadOptions.map((option, index) => {
+        const sizeText = formatFileSize(option.size);
+        // 构建更完整的显示文本，包含分辨率、帧率等信息
+        let displayText = '';
         if (option.quality) {
-            qualityInfo.push(option.quality);
+            displayText += option.quality;
         }
         
+        // 添加分辨率信息
+        if (option.height && option.width) {
+            if (displayText) displayText += ' ';
+            displayText += `(${option.width}x${option.height})`;
+        }
+        
+        // 添加帧率信息
         if (option.frameRate) {
-            qualityInfo.push(`${option.frameRate}fps`);
+            displayText += ` ${option.frameRate}FPS`;
         }
         
-        if (option.bitRate) {
-            qualityInfo.push(`${Math.round(option.bitRate / 1000)}kbps`);
+        // 如果以上信息都没有，则显示默认分辨率
+        if (!displayText && option.resolution) {
+            displayText = option.resolution;
         }
         
-        if (option.width && option.height) {
-            qualityInfo.push(`${option.width}x${option.height}`);
+        // 如果仍然没有信息，则显示基本标签
+        if (!displayText) {
+            displayText = '视频下载';
         }
         
-        // 添加格式信息
-        if (option.format) {
-            qualityInfo.push(option.format.toUpperCase());
-        }
+        const filename = generateFilename(videoDetail, option, option.fps || option.frameRate || videoFPS);
         
-        // 生成最终的链接显示文本
-        const displayText = qualityInfo.join(' · ') || '视频';
-        const sizeText = option.size ? formatFileSize(option.size) : '未知大小';
-        
-        // 添加调试信息
-        console.log(`下载选项 ${index + 1}:`, {
-            url: option.url,
-            quality: option.quality,
-            frameRate: option.frameRate,
-            bitRate: option.bitRate,
-            width: option.width,
-            height: option.height,
-            size: option.size,
-            filename: filename
-        });
-        
-        // 添加点击事件处理函数，支持前端下载
-        optionsHtml += `
-            <button class="download-link" 
-                    onclick="handleDownload(this, event, '${option.url}', '${filename}')"
-                    style="display: block; width: 100%; padding: 12px; margin: 5px 0; 
-                           background: #007bff; color: white; border: none; border-radius: 6px; 
-                           cursor: pointer; text-align: left; font-size: 14px;"
-                    data-url="${option.url}" 
-                    data-filename="${filename}"
-                    data-quality="${option.quality || ''}"
-                    data-size="${option.size || 0}">
+        return `
+            <a href="javascript:void(0)" class="download-link" 
+               data-url="${option.url}" 
+               data-filename="${filename}" 
+               onclick="handleDownload(this, event)">
                 ${index + 1}. ${displayText} (${sizeText})
-            </button>
+            </a>
         `;
     });
     
+    optionsHtml += downloadLinks.join('');
     optionsHtml += '</div>';
     return optionsHtml;
 }
