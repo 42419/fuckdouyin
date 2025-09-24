@@ -66,14 +66,14 @@ function setActiveNavItem() {
 
 // 处理前端下载 - 直接下载版
 // 增强的前端下载处理函数
-function handleDownload(element, event) {
+async function handleDownload(element, event) {
     event.preventDefault(); // 阻止默认的链接点击行为
     
     // 从data属性获取URL和文件名，避免直接使用href
-    const url = element.getAttribute('data-url');
-    const filename = element.getAttribute('data-filename');
+    const url = element.dataset.url;
+    const filename = element.dataset.filename;
     
-    if (!url) {
+    if (!url || url === 'undefined') {
         alert('下载链接无效，请稍后再试');
         return;
     }
@@ -89,16 +89,17 @@ function handleDownload(element, event) {
     element.style.pointerEvents = 'none'; // 防止重复点击
     element.style.opacity = '0.7'; // 视觉上表示按钮不可用
     
-    // 使用您的自定义域名作为Cloudflare Worker下载代理
-    const workerProxyUrl = `https://redirect-expander.liyunfei.eu.org/download?url=${encodeURIComponent(url)}`;
-    
-    fetch(workerProxyUrl, {
-        method: 'GET',
-        headers: {
-            'Accept': '*/*'
-        }
-    })
-    .then(response => {
+    try {
+        // 使用您的自定义域名作为Cloudflare Worker下载代理
+        const workerProxyUrl = `https://redirect-expander.liyunfei.eu.org/download?url=${encodeURIComponent(url)}`;
+        
+        const response = await fetch(workerProxyUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*'
+            }
+        });
+        
         console.log('Worker代理下载响应状态:', response.status);
         
         if (!response.ok) {
@@ -114,9 +115,7 @@ function handleDownload(element, event) {
             throw new Error('代理返回了HTML页面，可能视频URL无效或需要特殊处理');
         }
         
-        return response.blob();
-    })
-    .then(blob => {
+        const blob = await response.blob();
         console.log('下载的blob大小:', blob.size, 'bytes');
         console.log('blob类型:', blob.type);
         
@@ -147,14 +146,13 @@ function handleDownload(element, event) {
         }, 100);
         
         console.log('下载完成');
-    })
-    .catch(error => {
+    } catch (error) {
         console.error('Worker代理下载失败:', error.message);
         
         // 方法: 尝试直接下载（备用方案）
         console.log('尝试直接下载作为备用方案');
         tryDirectDownload(url, filename, element, originalText);
-    });
+    }
 }
 
 // 直接下载备用方案
