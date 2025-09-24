@@ -71,7 +71,9 @@
                placeholder="输入抖音短链接，例如：https://v.douyin.com/imHLp4PJ-yc"
                value="https://v.douyin.com/imHLp4PJ-yc">
         
-        <button class="test-button" onclick="testRedirect()">测试重定向</button>
+        <button class="test-button" onclick="testRedirect()">测试主要API</button>
+        <button class="test-button" onclick="testThirdParty()">测试第三方服务</button>
+        <button class="test-button" onclick="testAll()">测试所有方法</button>
         <button class="test-button" onclick="clearResults()">清除结果</button>
         
         <div id="testResults"></div>
@@ -80,10 +82,12 @@
     <div class="test-section">
         <h2>测试说明</h2>
         <ul>
-            <li><strong>本地测试</strong>：如果使用本地服务器，会调用Express.js的/api/redirect接口</li>
-            <li><strong>Cloudflare测试</strong>：如果部署到Cloudflare Pages，会调用Cloudflare Functions的/api/redirect接口</li>
-            <li><strong>预期结果</strong>：成功获取到重定向后的完整抖音视频URL</li>
-            <li><strong>备用方案</strong>：如果自动重定向失败，会显示手动获取链接的对话框</li>
+            <li><strong>主要API测试</strong>：测试增强版重定向API（6种方法）</li>
+            <li><strong>第三方服务测试</strong>：测试第三方短链接解析服务</li>
+            <li><strong>所有方法测试</strong>：依次测试主要API和第三方服务</li>
+            <li><strong>本地环境</strong>：使用Express.js服务器</li>
+            <li><strong>云端环境</strong>：使用Cloudflare Functions</li>
+            <li><strong>备用方案</strong>：如果所有自动方法失败，会显示手动获取链接的对话框</li>
         </ul>
     </div>
 
@@ -113,9 +117,9 @@
             })
             .then(response => {
                 console.log('API响应状态:', response.status);
-                return response.json();
+                return response.json().then(data => ({ response, data }));
             })
-            .then(data => {
+            .then(({ response, data }) => {
                 console.log('API响应数据:', data);
                 
                 let resultText = `API响应状态: ${response.status}\n`;
@@ -158,6 +162,90 @@
             resultElement.className = `result ${type}`;
             resultElement.textContent = text;
             resultsDiv.appendChild(resultElement);
+        }
+        
+        function testThirdParty() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('正在测试第三方服务API...', 'info');
+            
+            const thirdPartyUrl = `/api/third-party-redirect?url=${encodeURIComponent(shortLink)}`;
+            
+            fetch(thirdPartyUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            })
+            .then(response => {
+                console.log('第三方服务API响应状态:', response.status);
+                return response.json().then(data => ({ response, data }));
+            })
+            .then(({ response, data }) => {
+                console.log('第三方服务API响应数据:', data);
+                
+                let resultText = `第三方服务API响应状态: ${response.status}\n`;
+                resultText += `响应数据: ${JSON.stringify(data, null, 2)}\n\n`;
+                
+                if (data.success === true && data.url) {
+                    resultText += `✅ 第三方服务重定向成功！\n`;
+                    resultText += `原始链接: ${shortLink}\n`;
+                    resultText += `重定向链接: ${data.url}\n`;
+                    resultText += `使用服务: ${data.service || '未知'}\n`;
+                    resultText += `使用方法: ${data.method}`;
+                    showResult(resultText, 'success');
+                } else if (data.success === false && data.url) {
+                    resultText += `⚠️ 第三方服务未找到重定向，但返回了URL\n`;
+                    resultText += `返回的URL: ${data.url}\n`;
+                    resultText += `消息: ${data.message || '无'}`;
+                    showResult(resultText, 'info');
+                } else if (data.error) {
+                    resultText += `❌ 第三方服务API返回错误: ${data.error}`;
+                    showResult(resultText, 'error');
+                } else {
+                    resultText += `❓ 第三方服务未知响应格式`;
+                    showResult(resultText, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('第三方服务请求错误:', error);
+                let resultText = `❌ 第三方服务请求失败: ${error.message}\n\n`;
+                resultText += `可能的原因:\n`;
+                resultText += `1. 第三方服务不可用\n`;
+                resultText += `2. 网络连接问题\n`;
+                resultText += `3. CORS策略限制\n`;
+                resultText += `4. API接口错误`;
+                showResult(resultText, 'error');
+            });
+        }
+        
+        function testAll() {
+            const shortLink = document.getElementById('shortLinkInput').value.trim();
+            
+            if (!shortLink) {
+                showResult('请输入短链接', 'error');
+                return;
+            }
+            
+            showResult('开始测试所有方法...', 'info');
+            
+            // 先测试主要API
+            testRedirect();
+            
+            // 延迟2秒后测试第三方服务
+            setTimeout(() => {
+                showResult('主要API测试完成，开始测试第三方服务...', 'info');
+                testThirdParty();
+            }, 2000);
         }
         
         function clearResults() {

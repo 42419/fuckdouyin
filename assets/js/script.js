@@ -268,14 +268,13 @@ function extractAwemeId(input) {
 }
 
 // 处理抖音短链接的重定向 - 新增函数
-// 处理抖音短链接的重定向 - 使用Cloudflare Functions代理
+// 处理抖音短链接的重定向 - 增强版多方法重定向
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('尝试处理抖音短链接:', shortLink);
     
-    // 使用相对路径进行重定向处理，适配Cloudflare Pages
+    // 方法1: 使用主要重定向API
     const proxyUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
-    
-    console.log('发送请求到重定向API:', proxyUrl);
+    console.log('发送请求到主要重定向API:', proxyUrl);
     
     fetch(proxyUrl, {
         method: 'GET',
@@ -287,39 +286,76 @@ function handleShortLinkRedirect(shortLink, callback) {
         credentials: 'omit'
     })
     .then(response => {
-        console.log('重定向API响应状态:', response.status);
+        console.log('主要重定向API响应状态:', response.status);
         if (!response.ok) {
             throw new Error(`请求失败: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('重定向API响应数据:', data);
+        console.log('主要重定向API响应数据:', data);
         
         // 检查响应数据结构
         if (data.success === true && data.url) {
-            console.log('成功获取到重定向URL:', data.url);
+            console.log('主要API成功获取到重定向URL:', data.url);
             callback(data.url);
         } else if (data.success === false && data.url) {
             // 即使没有成功重定向，也尝试使用返回的URL
-            console.log('使用返回的URL（可能未重定向）:', data.url);
+            console.log('主要API返回URL（可能未重定向）:', data.url);
             callback(data.url);
-        } else if (data.error) {
-            console.error('重定向API返回错误:', data.error);
-            handleFallbackMethod(shortLink, callback);
         } else {
-            console.error('响应数据格式异常:', data);
+            // 主要API失败，尝试第三方服务
+            console.log('主要API失败，尝试第三方服务');
+            tryThirdPartyServices(shortLink, callback);
+        }
+    })
+    .catch(error => {
+        console.error('主要API请求出错:', error.message);
+        // 主要API失败，尝试第三方服务
+        tryThirdPartyServices(shortLink, callback);
+    });
+}
+
+// 尝试第三方服务
+function tryThirdPartyServices(shortLink, callback) {
+    console.log('尝试第三方服务处理短链接:', shortLink);
+    
+    const thirdPartyUrl = `/api/third-party-redirect?url=${encodeURIComponent(shortLink)}`;
+    console.log('发送请求到第三方服务API:', thirdPartyUrl);
+    
+    fetch(thirdPartyUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        mode: 'cors',
+        credentials: 'omit'
+    })
+    .then(response => {
+        console.log('第三方服务API响应状态:', response.status);
+        if (!response.ok) {
+            throw new Error(`第三方服务请求失败: ${response.status} - ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('第三方服务API响应数据:', data);
+        
+        if (data.success === true && data.url) {
+            console.log('第三方服务成功获取到重定向URL:', data.url);
+            callback(data.url);
+        } else if (data.success === false && data.url) {
+            console.log('第三方服务返回URL（可能未重定向）:', data.url);
+            callback(data.url);
+        } else {
+            console.error('第三方服务也无法处理，使用备用方法');
             handleFallbackMethod(shortLink, callback);
         }
     })
     .catch(error => {
-        console.error('请求出错:', error.message);
-        // 提供更详细的错误信息
-        if (error.message.includes('Failed to fetch')) {
-            console.error('网络请求失败，可能是CORS问题或服务器不可达');
-        } else if (error.message.includes('500')) {
-            console.error('服务器内部错误，重定向API可能有问题');
-        }
+        console.error('第三方服务请求出错:', error.message);
+        console.log('所有自动方法都失败，使用备用方法');
         handleFallbackMethod(shortLink, callback);
     });
 }
