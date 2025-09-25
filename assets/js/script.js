@@ -1161,6 +1161,19 @@ function showUpdateModal(versionInfo) {
         // 显示弹窗
         modal.style.display = 'flex';
         
+        // 移动端：确保动画类被移除，以便重新触发进入动画
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile && window.innerWidth <= 768) {
+            const modalContent = modal.querySelector('.update-modal-content');
+            if (modalContent) {
+                // 移除可能的关闭动画类
+                modal.classList.remove('closing');
+                modalContent.classList.remove('closing');
+                // 强制重排以重新触发CSS动画
+                void modalContent.offsetWidth;
+            }
+        }
+        
         // 添加ESC键关闭功能
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
@@ -1200,8 +1213,27 @@ function compareVersions(versionA, versionB) {
 // 关闭更新提示弹窗
 function closeUpdateModal() {
     const modal = document.getElementById('updateModal');
-    if (modal) {
-        modal.style.display = 'none';
+    const modalContent = modal ? modal.querySelector('.update-modal-content') : null;
+    
+    if (modal && modalContent) {
+        // 检查是否为移动设备
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile && window.innerWidth <= 768) {
+            // 移动端：添加关闭动画
+            modal.classList.add('closing');
+            modalContent.classList.add('closing');
+            
+            // 动画结束后隐藏弹窗
+            setTimeout(() => {
+                modal.style.display = 'none';
+                modal.classList.remove('closing');
+                modalContent.classList.remove('closing');
+            }, 300); // 与CSS动画时长保持一致
+        } else {
+            // 桌面端：直接隐藏
+            modal.style.display = 'none';
+        }
     }
 }
 
