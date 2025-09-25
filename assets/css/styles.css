@@ -310,13 +310,7 @@ header {
 
 /* 小屏幕设备 (768px 及以下) - 仅在banner栏无法完整显示时显示汉堡按钮 */
 @media (max-width: 768px) {
-    /* 减少动画以提高性能，避免闪烁 */
-    * {
-        animation-duration: 0.2s !important;
-        transition-duration: 0.2s !important;
-    }
-    
-    /* 禁用可能导致闪烁的动画 */
+    /* 优化特定元素的动画速度，避免闪烁 */
     .logo {
         animation: none !important;
     }
@@ -324,6 +318,20 @@ header {
     .hero-content::before,
     .result-container::before {
         animation: none !important;
+    }
+    
+    /* 优化过渡动画速度 */
+    .theme-toggle,
+    .menu-toggle,
+    #banner li a,
+    #banner {
+        animation-duration: 0.5s !important;
+        transition-duration: 0.5s !important;
+    }
+    
+    /* 确保加载动画保持正常速度 */
+    .loading-spinner {
+        animation-duration: 1s !important;
     }
     
     .header-container {
@@ -1731,13 +1739,13 @@ main {
 }
 
 @media (max-width: 480px) {
-    /* 进一步减少动画以提高性能，完全避免闪烁 */
+    /* 减少动画以提高性能，但保留合理的动画速度 */
     * {
-        animation-duration: 0.1s !important;
-        transition-duration: 0.1s !important;
+        animation-duration: 0.3s !important;
+        transition-duration: 0.3s !important;
     }
     
-    /* 禁用所有可能导致闪烁的动画 */
+    /* 保留关键动画，禁用可能导致闪烁的动画 */
     body::before {
         animation: none !important;
     }
@@ -1758,6 +1766,11 @@ main {
     
     .author-avatar {
         animation: none !important;
+    }
+    
+    /* 确保加载动画保持正常速度 */
+    .loading-spinner {
+        animation-duration: 1s !important;
     }
     
     .header-container {
@@ -1984,7 +1997,7 @@ main {
         width: 40px;
         height: 40px;
         margin-bottom: 16px;
-        animation: spin 0.67s linear infinite; /* 调整动画速度以保持视觉一致性 */
+        animation: spin 1s linear infinite; /* 恢复正常动画速度，与桌面端保持一致 */
     }
     
     .loading-overlay p {
