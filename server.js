@@ -88,7 +88,8 @@ app.get('/api/download', async (req, res) => {
 });
 
 // 启动服务器
-app.listen(PORT, () => {
-  console.log(`服务器运行在 http://localhost:${PORT}`);
-  console.log('请在浏览器中访问此地址来使用抖音下载工具');
+const serverPort = process.argv[2] || PORT;
+app.listen(serverPort, () => {
+    console.log(`服务器运行在 http://localhost:${serverPort}`);
+    console.log('请在浏览器中访问此地址来使用抖音下载工具');
 });

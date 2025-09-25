@@ -773,7 +773,7 @@ function fetchVideoData(apiUrl) {
 let currentVersion = '1.0.0'; // 当前版本号
 
 // 检查更新
-async function checkForUpdates() {
+async function checkForUpdates(forceShow = false) {
     try {
         // 获取版本信息
         const response = await fetch('/version.json?v=' + Date.now());
@@ -784,7 +784,7 @@ async function checkForUpdates() {
         const lastUpdateTime = localStorage.getItem('last_update_check');
         
         // 如果是第一次访问或版本不同，显示更新提示
-        if (!lastVersion || lastVersion !== versionInfo.version) {
+        if (!lastVersion || lastVersion !== versionInfo.version || forceShow) {
             // 显示更新提示
             showUpdateModal(versionInfo);
             
@@ -800,12 +800,26 @@ async function checkForUpdates() {
         }
         
         currentVersion = versionInfo.version;
+        
+        // 更新页面底部显示的版本号
+        updateVersionDisplay(versionInfo.version);
+        
     } catch (error) {
         console.log('版本检查失败:', error);
         // 如果版本文件不存在，设置默认版本
         if (!localStorage.getItem('app_version')) {
             localStorage.setItem('app_version', currentVersion);
         }
+        // 使用默认版本更新显示
+        updateVersionDisplay(currentVersion);
+    }
+}
+
+// 更新页面底部版本号显示
+function updateVersionDisplay(version) {
+    const versionLink = document.getElementById('versionLink');
+    if (versionLink) {
+        versionLink.textContent = `v${version}`;
     }
 }
 
@@ -818,12 +832,51 @@ function showUpdateModal(versionInfo) {
         // 清空之前的更新日志
         changelogList.innerHTML = '';
         
-        // 添加更新日志项
-        versionInfo.changelog.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            changelogList.appendChild(li);
-        });
+        // 检查是否有历史版本信息
+        if (versionInfo.history && versionInfo.history.length > 0) {
+            // 按版本号降序排列（从高到低）
+            const sortedHistory = versionInfo.history.sort((a, b) => {
+                return compareVersions(b.version, a.version);
+            });
+            
+            // 显示所有历史更新信息
+            sortedHistory.forEach(version => {
+                // 创建版本标题
+                const versionTitle = document.createElement('div');
+                versionTitle.className = 'version-title';
+                versionTitle.innerHTML = `<strong>v${version.version}</strong>`;
+                changelogList.appendChild(versionTitle);
+                
+                // 创建更新列表
+                const versionList = document.createElement('ul');
+                versionList.className = 'version-changelog';
+                
+                version.changelog.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    versionList.appendChild(li);
+                });
+                
+                changelogList.appendChild(versionList);
+            });
+        } else {
+            // 如果没有历史信息，显示当前版本的更新日志
+            const currentTitle = document.createElement('div');
+            currentTitle.className = 'version-title';
+            currentTitle.innerHTML = `<strong>v${versionInfo.version}</strong>`;
+            changelogList.appendChild(currentTitle);
+            
+            const currentList = document.createElement('ul');
+            currentList.className = 'version-changelog';
+            
+            versionInfo.changelog.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                currentList.appendChild(li);
+            });
+            
+            changelogList.appendChild(currentList);
+        }
         
         // 显示弹窗
         modal.style.display = 'flex';
@@ -844,6 +897,24 @@ function showUpdateModal(versionInfo) {
             }
         });
     }
+}
+
+// 版本号比较函数
+function compareVersions(versionA, versionB) {
+    const partsA = versionA.split('.').map(part => parseInt(part, 10));
+    const partsB = versionB.split('.').map(part => parseInt(part, 10));
+    
+    const maxLength = Math.max(partsA.length, partsB.length);
+    
+    for (let i = 0; i < maxLength; i++) {
+        const partA = partsA[i] || 0;
+        const partB = partsB[i] || 0;
+        
+        if (partA > partB) return 1;
+        if (partA < partB) return -1;
+    }
+    
+    return 0;
 }
 
 // 关闭更新提示弹窗

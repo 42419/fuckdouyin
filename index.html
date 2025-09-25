@@ -12,18 +12,31 @@
     <header>
         <div class="header-container">
             <h1 class="logo">视频下载工具</h1>
-            
-            <button class="theme-toggle" aria-label="切换明暗模式" onclick="toggleTheme()">
-                <svg t="1758784373742" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1520" width="200" height="200">
-                    <path d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z" fill="currentColor" p-id="1521"></path>
-                    <path d="M512 256a256 256 0 0 1 12.8 511.68L512 768V256z" fill="currentColor" p-id="1522"></path>
-                </svg>
-            </button>
+
+            <div class="header-right">
+                <ul id="banner">
+                    <li><a href="./index.html">下载视频</a></li>
+                    <li><a href="#">查看作者信息</a></li>
+                    <li><a href="#">下载主页所有视频</a></li>
+                </ul>
+
+                <button class="theme-toggle" aria-label="切换明暗模式" onclick="toggleTheme()">
+                    <svg t="1758784373742" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                        xmlns="http://www.w3.org/2000/svg" p-id="1520" width="200" height="200">
+                        <path
+                            d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z"
+                            fill="currentColor" p-id="1521"></path>
+                        <path d="M512 256a256 256 0 0 1 12.8 511.68L512 768V256z" fill="currentColor" p-id="1522">
+                        </path>
+                    </svg>
+                </button>
+            </div>
 
             <button class="menu-toggle" aria-label="打开菜单" onclick="toggleMenu()">
-                <svg t="1758613856773" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
-                    p-id="5780">
-                    <path d="M199.68 300.032m-49.152 0a4.8 4.8 0 1 0 98.304 0 4.8 4.8 0 1 0-98.304 0Z" p-id="5781"></path>
+                <svg t="1758613856773" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="5780">
+                    <path d="M199.68 300.032m-49.152 0a4.8 4.8 0 1 0 98.304 0 4.8 4.8 0 1 0-98.304 0Z" p-id="5781">
+                    </path>
                     <path
                         d="M402.432 343.04 829.44 343.04c23.552 0 44.032-19.456 44.032-44.032S852.992 256 829.44 256L402.432 256c-23.552 0-44.032 19.456-44.032 44.032S377.856 343.04 402.432 343.04z"
                         p-id="5782"></path>
@@ -31,21 +44,16 @@
                     <path
                         d="M829.44 468.992 402.432 468.992c-23.552 0-44.032 19.456-44.032 44.032s19.456 44.032 44.032 44.032L829.44 557.056c23.552 0 44.032-19.456 44.032-44.032S852.992 468.992 829.44 468.992z"
                         p-id="5784"></path>
-                    <path d="M199.68 724.992m-49.152 0a4.8 4.8 0 1 0 98.304 0 4.8 4.8 0 1 0-98.304 0Z" p-id="5785"></path>
+                    <path d="M199.68 724.992m-49.152 0a4.8 4.8 0 1 0 98.304 0 4.8 4.8 0 1 0-98.304 0Z" p-id="5785">
+                    </path>
                     <path
                         d="M829.44 680.96 402.432 680.96c-23.552 0-44.032 19.456-44.032 44.032s19.456 44.032 44.032 44.032L829.44 769.024c23.552 0 44.032-19.456 44.032-44.032S852.992 680.96 829.44 680.96z"
                         p-id="5786"></path>
                 </svg>
             </button>
-
-            <ul id="banner">
-                <li><a href="./index.html">下载视频</a></li>
-                <li><a href="#">查看作者信息</a></li>
-                <li><a href="#">下载主页所有视频</a></li>
-            </ul>
         </div>
     </header>
-    
+
     <main>
         <section class="hero">
             <div class="hero-content">
@@ -63,11 +71,11 @@
     <div id="updateModal" class="update-modal" style="display: none;">
         <div class="update-modal-content">
             <div class="update-modal-header">
-                <h3>🎉 网页已更新</h3>
+                <h3>🎉 网页更新内容</h3>
                 <button class="update-modal-close" onclick="closeUpdateModal()">×</button>
             </div>
             <div class="update-modal-body">
-                <p>发现新版本，更新内容：</p>
+                <!-- <p>发现新版本，更新内容：</p> -->
                 <ul id="updateChangelog"></ul>
             </div>
             <div class="update-modal-footer">
@@ -76,12 +84,30 @@
         </div>
     </div>
 
+    <!-- 版本信息显示 -->
+    <footer class="version-footer">
+        <div class="version-info">
+            <span>版本: </span>
+            <a href="#" id="versionLink" class="version-link">加载中...</a>
+        </div>
+    </footer>
+
     <script src="assets/js/smart-redirect.js"></script>
     <script src="assets/js/script.js"></script>
     <script>
         // 页面加载完成后检查更新
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             checkForUpdates();
+
+            // 添加版本号点击事件
+            const versionLink = document.getElementById('versionLink');
+            if (versionLink) {
+                versionLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    // 手动触发更新检查并强制显示更新弹窗
+                    checkForUpdates(true);
+                });
+            }
         });
     </script>
 </body>

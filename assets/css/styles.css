@@ -332,9 +332,12 @@ header {
         gap: 8px;
     }
     
-    .header-container .theme-toggle {
+    .header-container .header-right {
         order: 2;
         margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 16px;
     }
     
     .header-container .menu-toggle {
@@ -493,6 +496,30 @@ header {
 
 /* 中间屏幕设备 (769px 到 991px) */
 @media (min-width: 769px) and (max-width: 991px) {
+    .header-container {
+        justify-content: space-between; /* 将元素分散排列 */
+    }
+    
+    .logo {
+        margin-right: auto; /* 将logo推到左边 */
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto; /* 将整个右侧内容推到右边 */
+    }
+    
+    .theme-toggle {
+        display: flex; /* 在中间屏幕上显示明暗切换按钮 */
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+        margin-left: 0; /* 移除之前的margin */
+    }
+    
     .menu-toggle {
         display: none; /* 确保在能完整显示banner栏三个按钮的中间屏幕上隐藏汉堡按钮 */
     }
@@ -722,17 +749,19 @@ header {
 
 /* 大屏幕设备 (1200px 及以上) */
 @media (min-width: 1200px) {
-    .theme-toggle {
-        display: flex; /* 在大屏幕上显示明暗切换按钮 */
-        align-items: center;
-        justify-content: center;
-        min-width: 48px;
-        min-height: 48px;
-        margin-left: 16px;
+    .header-container {
+        justify-content: space-between; /* 将元素分散排列 */
     }
     
-    .menu-toggle {
-        display: none; /* 确保在大屏幕上隐藏汉堡按钮 */
+    .logo {
+        margin-right: 0; /* 移除自动右边距 */
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto; /* 将整个右侧内容推到右边 */
     }
     
     #banner {
@@ -744,9 +773,22 @@ header {
         background-color: transparent;
         box-shadow: none;
         padding: 0;
-        margin: 0;
+        margin: 0; /* 移除之前的margin */
         gap: 32px;
         height: 100%;
+    }
+    
+    .theme-toggle {
+        display: flex; /* 在大屏幕上显示明暗切换按钮 */
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+        margin-left: 0; /* 移除之前的margin */
+    }
+    
+    .menu-toggle {
+        display: none; /* 确保在大屏幕上隐藏汉堡按钮 */
     }
     
     #banner li {
@@ -795,6 +837,13 @@ header {
 @media (min-width: 1400px) {
     .menu-toggle {
         display: none; /* 确保在超大屏幕上隐藏汉堡按钮 */
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto; /* 将整个右侧内容推到右边 */
     }
     
     #banner {
@@ -855,13 +904,28 @@ header {
 
 /* 中等屏幕设备 (992px 到 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
+    .header-container {
+        justify-content: space-between; /* 将元素分散排列 */
+    }
+    
+    .logo {
+        margin-right: auto; /* 将logo推到左边 */
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-left: auto; /* 将整个右侧内容推到右边 */
+    }
+    
     .theme-toggle {
         display: flex; /* 在中等屏幕上显示明暗切换按钮 */
         align-items: center;
         justify-content: center;
         min-width: 48px;
         min-height: 48px;
-        margin-left: 16px;
+        margin-left: 0; /* 移除之前的margin */
     }
     
     .menu-toggle {
@@ -2098,5 +2162,61 @@ main {
     
     .update-modal-footer {
         padding: 12px 20px 20px;
+    }
+}
+
+/* 版本信息样式 */
+.version-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid var(--glass-border);
+    padding: 12px 0;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.version-info {
+    font-size: 14px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.version-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-small);
+    transition: var(--transition-fast);
+    cursor: pointer;
+}
+
+.version-link:hover {
+    background: var(--glass-bg);
+    color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .version-footer {
+        padding: 10px 0;
+    }
+    
+    .version-info {
+        font-size: 13px;
+    }
+    
+    .version-link {
+        padding: 3px 6px;
     }
 }
