@@ -1,0 +1,14 @@
+# Cloudflare Pages 缓存控制头文件
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+
+/version.json
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=3600, s-maxage=3600
+
+/*
+  Cache-Control: public, max-age=300, s-maxage=300

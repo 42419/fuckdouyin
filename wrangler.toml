@@ -1,0 +1,31 @@
+name = "douyin-downloader"
+compatibility_date = "2024-01-01"
+
+[env.production]
+# 生产环境配置
+
+# 缓存控制
+[[kv_namespaces]]
+id = "cache-control"
+
+# 页面规则
+[[routes]]
+pattern = "/*"
+custom_domain = false
+
+# 缓存设置
+[cache]
+# HTML文件不缓存
+[[cache.rules]]
+path = "/index.html"
+cache_ttl = 0
+
+# 静态资源缓存1小时
+[[cache.rules]]
+path = "/assets/*"
+cache_ttl = 3600
+
+# 其他文件缓存5分钟
+[[cache.rules]]
+path = "/*"
+cache_ttl = 300

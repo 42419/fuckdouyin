@@ -769,6 +769,91 @@ function fetchVideoData(apiUrl) {
         });
 }
 
+// 更新检测和提示功能
+let currentVersion = '1.0.0'; // 当前版本号
+
+// 检查更新
+async function checkForUpdates() {
+    try {
+        // 获取版本信息
+        const response = await fetch('/version.json?v=' + Date.now());
+        const versionInfo = await response.json();
+        
+        // 检查本地存储的版本号
+        const lastVersion = localStorage.getItem('app_version');
+        const lastUpdateTime = localStorage.getItem('last_update_check');
+        
+        // 如果是第一次访问或版本不同，显示更新提示
+        if (!lastVersion || lastVersion !== versionInfo.version) {
+            // 显示更新提示
+            showUpdateModal(versionInfo);
+            
+            // 更新本地存储
+            localStorage.setItem('app_version', versionInfo.version);
+            localStorage.setItem('last_update_check', Date.now().toString());
+        } else {
+            // 检查是否需要重新获取最新版本（每24小时检查一次）
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (!lastUpdateTime || Date.now() - parseInt(lastUpdateTime) > oneDay) {
+                localStorage.setItem('last_update_check', Date.now().toString());
+            }
+        }
+        
+        currentVersion = versionInfo.version;
+    } catch (error) {
+        console.log('版本检查失败:', error);
+        // 如果版本文件不存在，设置默认版本
+        if (!localStorage.getItem('app_version')) {
+            localStorage.setItem('app_version', currentVersion);
+        }
+    }
+}
+
+// 显示更新提示弹窗
+function showUpdateModal(versionInfo) {
+    const modal = document.getElementById('updateModal');
+    const changelogList = document.getElementById('updateChangelog');
+    
+    if (modal && changelogList) {
+        // 清空之前的更新日志
+        changelogList.innerHTML = '';
+        
+        // 添加更新日志项
+        versionInfo.changelog.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            changelogList.appendChild(li);
+        });
+        
+        // 显示弹窗
+        modal.style.display = 'flex';
+        
+        // 添加ESC键关闭功能
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closeUpdateModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+        
+        // 点击背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeUpdateModal();
+            }
+        });
+    }
+}
+
+// 关闭更新提示弹窗
+function closeUpdateModal() {
+    const modal = document.getElementById('updateModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
 // 显示或隐藏加载状态
 function showLoading(isLoading, showProgress = false) {
     let loadingElement = document.getElementById('loading');

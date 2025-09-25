@@ -59,8 +59,31 @@
         </section>
     </main>
 
+    <!-- 更新提示弹窗 -->
+    <div id="updateModal" class="update-modal" style="display: none;">
+        <div class="update-modal-content">
+            <div class="update-modal-header">
+                <h3>🎉 网页已更新</h3>
+                <button class="update-modal-close" onclick="closeUpdateModal()">×</button>
+            </div>
+            <div class="update-modal-body">
+                <p>发现新版本，更新内容：</p>
+                <ul id="updateChangelog"></ul>
+            </div>
+            <div class="update-modal-footer">
+                <button class="update-modal-btn" onclick="closeUpdateModal()">知道了</button>
+            </div>
+        </div>
+    </div>
+
     <script src="assets/js/smart-redirect.js"></script>
     <script src="assets/js/script.js"></script>
+    <script>
+        // 页面加载完成后检查更新
+        document.addEventListener('DOMContentLoaded', function() {
+            checkForUpdates();
+        });
+    </script>
 </body>
 
 </html>
