@@ -20,6 +20,53 @@ function toggleMenu() {
     button.classList.toggle('active');
 }
 
+function toggleTheme() {
+    const body = document.body;
+    const currentTheme = body.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    body.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // 更新CSS变量
+    updateThemeColors(newTheme);
+}
+
+function updateThemeColors(theme) {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+        root.style.setProperty('--text-color', '#ffffff');
+        root.style.setProperty('--text-light', '#d1d5db');
+        root.style.setProperty('--bg-header', '#0f172a');
+        root.style.setProperty('--bg-menu', '#1e293b');
+        root.style.setProperty('--bg-main', '#0f172a');
+        root.style.setProperty('--bg-card', '#1e293b');
+        root.style.setProperty('--glass-bg', 'rgba(30, 41, 59, 0.8)');
+        root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.1)');
+        root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.3)');
+        root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.4)');
+        root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.2)');
+    } else {
+        root.style.setProperty('--text-color', '#1f2937');
+        root.style.setProperty('--text-light', '#6b7280');
+        root.style.setProperty('--bg-header', '#ffffff');
+        root.style.setProperty('--bg-menu', '#f8fafc');
+        root.style.setProperty('--bg-main', '#ffffff');
+        root.style.setProperty('--bg-card', '#ffffff');
+        root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
+        root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.1)');
+        root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.1)');
+        root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.15)');
+        root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.08)');
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.setAttribute('data-theme', savedTheme);
+    updateThemeColors(savedTheme);
+}
+
 
 // 点击外部关闭菜单
 document.addEventListener('click', function(event) {
@@ -64,6 +111,12 @@ function setActiveNavItem() {
     });
 }
 
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    initTheme();
+    setActiveNavItem();
+});
+
 // 处理前端下载 - 直接下载版
 // 增强的前端下载处理函数
 async function handleDownload(element, event) {
@@ -80,8 +133,8 @@ async function handleDownload(element, event) {
     
     console.log(`开始下载: ${filename}，URL: ${url}`);
     
-    // 显示加载状态
-    showLoading(true);
+    // 显示加载状态并显示进度条
+    showLoading(true, true);
     
     // 添加额外的用户提示
     const originalText = element.innerHTML;
@@ -93,25 +146,17 @@ async function handleDownload(element, event) {
         // 使用您的自定义域名作为Cloudflare Worker下载代理
         const workerProxyUrl = `https://redirect-expander.liyunfei.eu.org/download?url=${encodeURIComponent(url)}`;
         
-        // 创建进度条元素
-        const progressContainer = document.createElement('div');
-        progressContainer.className = 'download-progress-container';
-        progressContainer.innerHTML = `
-                <div class="download-progress-bar">
-                    <div class="download-progress-fill"></div>
-                </div>
-                <div class="download-progress-text">0%</div>
-            `;
+        // 获取遮罩中的进度条元素
+        const loadingElement = document.getElementById('loading');
+        const progressContainer = loadingElement.querySelector('.download-progress-container');
+        const progressFill = loadingElement.querySelector('.download-progress-fill');
+        const progressText = loadingElement.querySelector('.download-progress-text');
         
-        // 将进度条插入到下载按钮下方
-        element.parentNode.appendChild(progressContainer);
-        
-        const progressBar = progressContainer.querySelector('.download-progress-bar');
-        const progressFill = progressContainer.querySelector('.download-progress-fill');
-        const progressText = progressContainer.querySelector('.download-progress-text');
-        
-        // 显示进度条
-        progressContainer.style.display = 'block';
+        // 更新遮罩中的文本为下载状态
+        const loadingText = loadingElement.querySelector('p');
+        if (loadingText) {
+            loadingText.textContent = '正在下载视频...';
+        }
         
         const response = await fetch(workerProxyUrl, {
             method: 'GET',
@@ -196,9 +241,6 @@ async function handleDownload(element, event) {
             document.body.removeChild(link);
             window.URL.revokeObjectURL(downloadUrl);
             showLoading(false);
-            // 隐藏并移除进度条
-            progressContainer.style.display = 'none';
-            progressContainer.remove();
             // 恢复按钮状态
             element.innerHTML = originalText;
             element.style.pointerEvents = 'auto';
@@ -209,12 +251,8 @@ async function handleDownload(element, event) {
     } catch (error) {
         console.error('Worker代理下载失败:', error.message);
         
-        // 隐藏进度条
-        const progressContainer = element.parentNode.querySelector('.download-progress-container');
-        if (progressContainer) {
-            progressContainer.style.display = 'none';
-            progressContainer.remove();
-        }
+        // 隐藏遮罩和进度条
+        showLoading(false);
         
         // 方法: 尝试直接下载（备用方案）
         console.log('尝试直接下载作为备用方案');
@@ -732,7 +770,7 @@ function fetchVideoData(apiUrl) {
 }
 
 // 显示或隐藏加载状态
-function showLoading(isLoading) {
+function showLoading(isLoading, showProgress = false) {
     let loadingElement = document.getElementById('loading');
     
     if (isLoading) {
@@ -743,12 +781,29 @@ function showLoading(isLoading) {
             loadingElement.innerHTML = `
                 <div class="loading-spinner"></div>
                 <p>正在解析视频...</p>
+                <div class="download-progress-container" style="display: none; margin-top: 20px; width: 200px;">
+                    <div class="download-progress-bar">
+                        <div class="download-progress-fill"></div>
+                    </div>
+                    <div class="download-progress-text">0%</div>
+                </div>
             `;
             document.body.appendChild(loadingElement);
         }
         loadingElement.style.display = 'flex';
+        
+        // 控制进度条显示
+        const progressContainer = loadingElement.querySelector('.download-progress-container');
+        if (progressContainer) {
+            progressContainer.style.display = showProgress ? 'block' : 'none';
+        }
     } else if (loadingElement) {
         loadingElement.style.display = 'none';
+        // 重置进度条
+        const progressFill = loadingElement.querySelector('.download-progress-fill');
+        const progressText = loadingElement.querySelector('.download-progress-text');
+        if (progressFill) progressFill.style.width = '0%';
+        if (progressText) progressText.textContent = '0%';
     }
 }
 

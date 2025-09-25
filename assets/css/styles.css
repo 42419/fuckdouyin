@@ -48,27 +48,11 @@ body {
     overflow-x: hidden;
 }
 
-/* 添加静态背景装饰效果 */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
-    z-index: -1;
-    pointer-events: none;
-}
+/* 移除背景装饰效果，使用纯色背景 */
 
 /* 头部样式 */
 header {
     background: var(--bg-header);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     width: 100%;
     height: 72px;
     box-shadow: var(--shadow);
@@ -126,6 +110,34 @@ header {
     }
 }
 
+/* 🌙 明暗切换按钮 - 默认隐藏，仅在小屏幕显示 */
+.theme-toggle {
+    display: none;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    cursor: pointer;
+    padding: 12px;
+    border-radius: 50%;
+    transition: var(--transition-fast);
+    z-index: 20;
+    /* 增强点击区域，确保整个按钮区域可点击 */
+    position: relative;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* 移除默认蓝色框 */
+    outline: none;
+    outline-offset: 0;
+    box-shadow: var(--shadow-card);
+    /* 防止iOS点击高亮 */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
 /* 🍔 汉堡按钮 - 默认隐藏，仅在小屏幕显示 */
 .menu-toggle {
     display: none;
@@ -154,6 +166,17 @@ header {
     touch-action: manipulation;
 }
 
+.theme-toggle svg {
+    width: 26px;
+    height: 26px;
+    color: var(--text-color);
+    transition: var(--transition);
+    /* 确保SVG不阻止按钮的点击事件 */
+    pointer-events: none;
+    /* 确保SVG图标完全居中 */
+    display: block;
+}
+
 .menu-toggle svg {
     width: 26px;
     height: 26px;
@@ -163,6 +186,17 @@ header {
     pointer-events: none;
     /* 确保SVG图标完全居中 */
     display: block;
+}
+
+.theme-toggle:hover {
+    background: var(--primary-color);
+    transform: scale(1.1);
+    box-shadow: var(--shadow-hover);
+}
+
+.theme-toggle:hover svg {
+    color: var(--text-white);
+    transform: scale(1.1);
 }
 
 .menu-toggle:hover {
@@ -184,6 +218,21 @@ header {
 .menu-toggle.active svg {
     transform: rotate(90deg) scale(1.1);
     fill: var(--text-white);
+}
+
+/* 移除所有状态下的默认蓝色框 */
+.theme-toggle:focus,
+.theme-toggle:active,
+.theme-toggle:focus-within {
+    outline: none;
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+/* 添加按钮点击时的视觉反馈 */
+.theme-toggle:active {
+    transform: scale(0.95);
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 /* 移除所有状态下的默认蓝色框 */
@@ -280,6 +329,16 @@ header {
     .header-container {
         padding: 0 16px;
         height: 64px;
+        gap: 8px;
+    }
+    
+    .header-container .theme-toggle {
+        order: 2;
+        margin-left: auto;
+    }
+    
+    .header-container .menu-toggle {
+        order: 3;
     }
     
     header {
@@ -331,14 +390,30 @@ header {
         min-height: 48px;
     }
     
-    .menu-toggle {
+    .theme-toggle {
         display: block;
-        /* 增强触摸区域 */
+        /* 确保与汉堡按钮大小完全一致 */
         min-width: 48px;
         min-height: 48px;
+        width: 48px;
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 12px;
+    }
+    
+    .menu-toggle {
+        display: block;
+        /* 确保与明暗切换按钮大小完全一致 */
+        min-width: 48px;
+        min-height: 48px;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px;
     }
     
     #banner {
@@ -647,6 +722,15 @@ header {
 
 /* 大屏幕设备 (1200px 及以上) */
 @media (min-width: 1200px) {
+    .theme-toggle {
+        display: flex; /* 在大屏幕上显示明暗切换按钮 */
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+        margin-left: 16px;
+    }
+    
     .menu-toggle {
         display: none; /* 确保在大屏幕上隐藏汉堡按钮 */
     }
@@ -771,6 +855,15 @@ header {
 
 /* 中等屏幕设备 (992px 到 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
+    .theme-toggle {
+        display: flex; /* 在中等屏幕上显示明暗切换按钮 */
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        min-height: 48px;
+        margin-left: 16px;
+    }
+    
     .menu-toggle {
         display: none; /* 确保在中等屏幕上隐藏汉堡按钮 */
     }
@@ -827,14 +920,8 @@ main {
 }
 
 .hero-content::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--primary-light), var(--primary-color));
-    animation: shimmer 3s ease-in-out infinite;
+    /* 删除横线 */
+    display: none;
 }
 
 @keyframes shimmer {
@@ -1036,6 +1123,37 @@ main {
 
 .loading-overlay p {
     font-size: 18px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* 遮罩中的下载进度条样式 */
+.loading-overlay .download-progress-container {
+    margin-top: 20px;
+    width: 200px;
+    text-align: center;
+}
+
+.loading-overlay .download-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--glass-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    margin-bottom: 8px;
+}
+
+.loading-overlay .download-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.loading-overlay .download-progress-text {
+    font-size: 14px;
     color: var(--text-color);
     font-weight: 500;
 }
@@ -1802,6 +1920,7 @@ main {
         width: 40px;
         height: 40px;
         margin-bottom: 16px;
+        animation: spin 0.67s linear infinite; /* 调整动画速度以保持视觉一致性 */
     }
     
     .loading-overlay p {
