@@ -23,13 +23,258 @@ function toggleMenu() {
 function toggleTheme() {
     const body = document.body;
     const currentTheme = body.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const autoTheme = localStorage.getItem('autoTheme') === 'true';
     
-    body.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    if (autoTheme) {
+        // 如果当前是自动模式，切换到手动模式并使用与当前系统主题相反的主题
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const newTheme = systemPrefersDark ? 'light' : 'dark';
+        
+        localStorage.setItem('autoTheme', 'false');
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeColors(newTheme);
+        updateThemeToggleIcon();
+        
+        // 显示提示信息
+        showAutoModeHint('已切换到手动模式，长按可重新启用自动模式');
+    } else {
+        // 手动切换主题
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        body.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeColors(newTheme);
+        updateThemeToggleIcon();
+    }
+}
+
+// 切换自动/手动主题模式
+function toggleAutoTheme() {
+    const autoTheme = localStorage.getItem('autoTheme') === 'true';
+    const newAutoTheme = !autoTheme;
     
-    // 更新CSS变量
-    updateThemeColors(newTheme);
+    localStorage.setItem('autoTheme', newAutoTheme);
+    
+    if (newAutoTheme) {
+        // 切换到自动模式，立即应用系统主题
+        applySystemTheme();
+        showAutoModeHint('已启用自动模式，将跟随系统主题变化');
+    } else {
+        showAutoModeHint('已切换到手动模式');
+    }
+    
+    updateThemeToggleIcon();
+}
+
+// 处理移动设备触摸事件
+let touchStartTime = 0;
+let touchTimer = null;
+
+function handleThemeTouch(event) {
+    // 阻止默认行为
+    event.preventDefault();
+    
+    // 记录触摸开始时间
+    touchStartTime = Date.now();
+    
+    // 设置长按计时器
+    touchTimer = setTimeout(() => {
+        // 长按事件：切换自动/手动模式
+        toggleAutoTheme();
+        touchTimer = null;
+    }, 500); // 500毫秒长按
+}
+
+// 添加触摸结束事件监听
+document.addEventListener('touchend', function(event) {
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (themeToggle && themeToggle.contains(event.target)) {
+        // 清除长按计时器
+        if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+        
+        // 如果是短按（小于500ms），执行普通点击
+        const touchDuration = Date.now() - touchStartTime;
+        if (touchDuration < 500) {
+            toggleTheme();
+        }
+    }
+});
+
+// 添加触摸取消事件监听
+document.addEventListener('touchcancel', function(event) {
+    const themeToggle = document.querySelector('.theme-toggle');
+    if (themeToggle && themeToggle.contains(event.target)) {
+        // 清除长按计时器
+        if (touchTimer) {
+            clearTimeout(touchTimer);
+            touchTimer = null;
+        }
+    }
+});
+
+// 显示自动模式提示信息
+function showAutoModeHint(message) {
+    // 创建提示元素
+    const hintElement = document.createElement('div');
+    hintElement.className = 'auto-mode-hint';
+    hintElement.innerHTML = `
+        <div class="hint-content">
+            <span>${message}</span>
+            <button class="hint-close">×</button>
+        </div>
+    `;
+    
+    // 添加样式
+    hintElement.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg-card);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: var(--shadow);
+        z-index: 1000;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    const hintContent = hintElement.querySelector('.hint-content');
+    hintContent.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    `;
+    
+    const hintClose = hintElement.querySelector('.hint-close');
+    hintClose.style.cssText = `
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        color: var(--text-light);
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    `;
+    
+    // 添加动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .hint-close:hover {
+            background: var(--glass-border);
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 添加到页面
+    document.body.appendChild(hintElement);
+    
+    // 关闭按钮事件
+    hintClose.addEventListener('click', function() {
+        hintElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+        setTimeout(() => {
+            if (hintElement.parentNode) {
+                hintElement.parentNode.removeChild(hintElement);
+            }
+        }, 300);
+    });
+    
+    // 3秒后自动消失
+    setTimeout(() => {
+        if (hintElement.parentNode) {
+            hintElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+            setTimeout(() => {
+                if (hintElement.parentNode) {
+                    hintElement.parentNode.removeChild(hintElement);
+                }
+            }, 300);
+        }
+    }, 3000);
+}
+
+// 应用系统主题
+function applySystemTheme() {
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = systemPrefersDark ? 'dark' : 'light';
+    
+    document.body.setAttribute('data-theme', theme);
+    updateThemeColors(theme);
+    updateThemeToggleIcon();
+}
+
+// 更新主题切换图标
+function updateThemeToggleIcon() {
+    const themeToggle = document.querySelector('.theme-toggle');
+    const autoTheme = localStorage.getItem('autoTheme') === 'true';
+    const currentTheme = document.body.getAttribute('data-theme');
+    
+    if (!themeToggle) return;
+    
+    // 清除现有图标
+    themeToggle.innerHTML = '';
+    
+    if (autoTheme) {
+        // 自动模式图标
+        themeToggle.innerHTML = `
+            <svg t="1758784373742" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                xmlns="http://www.w3.org/2000/svg" p-id="1520" width="200" height="200">
+                <path
+                    d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z"
+                    fill="currentColor" p-id="1521"></path>
+                <path d="M512 256a256 256 0 0 1 12.8 511.68L512 768V256z" fill="currentColor" p-id="1522">
+                </path>
+            </svg>
+            <span class="auto-indicator">自动</span>
+        `;
+    } else {
+        // 手动模式图标
+        if (currentTheme === 'dark') {
+            // 暗色模式图标（太阳）
+            themeToggle.innerHTML = `
+                <svg t="1758784373742" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="1520" width="200" height="200">
+                    <path
+                        d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z"
+                        fill="currentColor" p-id="1521"></path>
+                    <path d="M512 256a256 256 0 0 1 12.8 511.68L512 768V256z" fill="currentColor" p-id="1522">
+                    </path>
+                </svg>
+            `;
+        } else {
+            // 亮色模式图标（月亮）
+            themeToggle.innerHTML = `
+                <svg t="1758784373742" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="1520" width="200" height="200">
+                    <path
+                        d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z"
+                        fill="currentColor" p-id="1521"></path>
+                    <path d="M512 256a256 256 0 0 1 12.8 511.68L512 768V256z" fill="currentColor" p-id="1522">
+                    </path>
+                </svg>
+            `;
+        }
+    }
 }
 
 function updateThemeColors(theme) {
@@ -62,9 +307,44 @@ function updateThemeColors(theme) {
 }
 
 function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.body.setAttribute('data-theme', savedTheme);
-    updateThemeColors(savedTheme);
+    // 强制设置为自动模式，忽略之前的设置
+    localStorage.setItem('autoTheme', 'true');
+    
+    // 始终监听系统主题变化，但只有在自动模式下才响应
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // 使用兼容性更好的监听方式
+    const handleThemeChange = function(e) {
+        if (localStorage.getItem('autoTheme') === 'true') {
+            applySystemTheme();
+        }
+    };
+    
+    // 尝试使用现代API
+    if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleThemeChange);
+    } else if (mediaQuery.addListener) {
+        // 兼容旧浏览器
+        mediaQuery.addListener(handleThemeChange);
+    }
+    
+    // 定期检查系统主题变化（作为备用方案）
+    setInterval(() => {
+        if (localStorage.getItem('autoTheme') === 'true') {
+            const currentSystemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const currentTheme = document.body.getAttribute('data-theme');
+            
+            if (currentSystemTheme !== currentTheme) {
+                applySystemTheme();
+            }
+        }
+    }, 5000); // 每5秒检查一次
+    
+    // 总是应用系统主题（自动模式）
+    applySystemTheme();
+    
+    // 更新主题切换图标
+    updateThemeToggleIcon();
 }
 
 

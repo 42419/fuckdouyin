@@ -199,6 +199,22 @@ header {
     transform: scale(1.1);
 }
 
+/* 自动主题指示器 */
+.auto-indicator {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    background: var(--primary-color);
+    color: var(--text-white);
+    font-size: 10px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: var(--shadow-card);
+    pointer-events: none;
+}
+
 .menu-toggle:hover {
     background: var(--primary-color);
     transform: scale(1.1);

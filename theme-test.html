@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主题切换测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body[data-theme="dark"] {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        body[data-theme="light"] {
+            background-color: #ffffff;
+            color: #333333;
+        }
+        
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .info-box {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        body[data-theme="dark"] .info-box {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        
+        button:hover {
+            opacity: 0.8;
+        }
+        
+        .console-output {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        body[data-theme="dark"] .console-output {
+            background: #2d2d2d;
+            border-color: #555;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="test-container">
+        <h1>主题切换功能测试</h1>
+        
+        <div class="info-box">
+            <h3>当前状态信息</h3>
+            <div id="status-info">加载中...</div>
+        </div>
+        
+        <div class="info-box">
+            <h3>测试操作</h3>
+            <button onclick="testToggleTheme()">切换主题</button>
+            <button onclick="testToggleAutoTheme()">切换自动/手动模式</button>
+            <button onclick="testSystemThemeChange()">模拟系统主题变化</button>
+            <button onclick="clearConsole()">清空控制台</button>
+        </div>
+        
+        <div class="info-box">
+            <h3>控制台输出</h3>
+            <div id="console-output" class="console-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换功能
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const autoTheme = localStorage.getItem('autoTheme') === 'true';
+            
+            if (autoTheme) {
+                // 如果当前是自动模式，切换到手动模式并使用与当前系统主题相反的主题
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const newTheme = systemPrefersDark ? 'light' : 'dark';
+                
+                localStorage.setItem('autoTheme', 'false');
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeColors(newTheme);
+            } else {
+                // 手动切换主题
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeColors(newTheme);
+            }
+        }
+
+        // 切换自动/手动主题模式
+        function toggleAutoTheme() {
+            const autoTheme = localStorage.getItem('autoTheme') === 'true';
+            const newAutoTheme = !autoTheme;
+            
+            localStorage.setItem('autoTheme', newAutoTheme);
+            
+            if (newAutoTheme) {
+                // 切换到自动模式，立即应用系统主题
+                applySystemTheme();
+            }
+        }
+
+        // 应用系统主题
+        function applySystemTheme() {
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = systemPrefersDark ? 'dark' : 'light';
+            
+            document.body.setAttribute('data-theme', theme);
+            updateThemeColors(theme);
+        }
+
+        // 更新主题颜色
+        function updateThemeColors(theme) {
+            const root = document.documentElement;
+            if (theme === 'dark') {
+                root.style.setProperty('--text-color', '#ffffff');
+                root.style.setProperty('--text-light', '#d1d5db');
+                root.style.setProperty('--bg-header', '#0f172a');
+                root.style.setProperty('--bg-menu', '#1e293b');
+                root.style.setProperty('--bg-main', '#0f172a');
+                root.style.setProperty('--bg-card', '#1e293b');
+                root.style.setProperty('--glass-bg', 'rgba(30, 41, 59, 0.8)');
+                root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.1)');
+                root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.3)');
+                root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.4)');
+                root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.2)');
+            } else {
+                root.style.setProperty('--text-color', '#1f2937');
+                root.style.setProperty('--text-light', '#6b7280');
+                root.style.setProperty('--bg-header', '#ffffff');
+                root.style.setProperty('--bg-menu', '#f8fafc');
+                root.style.setProperty('--bg-main', '#ffffff');
+                root.style.setProperty('--bg-card', '#ffffff');
+                root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
+                root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.1)');
+                root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.1)');
+                root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.15)');
+                root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.08)');
+            }
+        }
+
+        function initTheme() {
+            const autoTheme = localStorage.getItem('autoTheme') === 'true';
+            
+            // 始终监听系统主题变化，但只有在自动模式下才响应
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // 使用兼容性更好的监听方式
+            const handleThemeChange = function(e) {
+                console.log('系统主题变化检测到，当前自动模式:', localStorage.getItem('autoTheme') === 'true');
+                console.log('系统主题变化后的偏好:', e.matches ? 'dark' : 'light');
+                
+                if (localStorage.getItem('autoTheme') === 'true') {
+                    console.log('应用系统主题');
+                    applySystemTheme();
+                    updateStatusInfo();
+                }
+            };
+            
+            // 尝试使用现代API
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleThemeChange);
+                console.log('已添加系统主题变化监听器 (addEventListener)');
+            } else if (mediaQuery.addListener) {
+                // 兼容旧浏览器
+                mediaQuery.addListener(handleThemeChange);
+                console.log('已添加系统主题变化监听器 (addListener)');
+            }
+            
+            // 定期检查系统主题变化（作为备用方案）
+            setInterval(() => {
+                if (localStorage.getItem('autoTheme') === 'true') {
+                    const currentSystemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    const currentTheme = document.body.getAttribute('data-theme');
+                    
+                    if (currentSystemTheme !== currentTheme) {
+                        console.log('检测到系统主题与页面主题不一致，应用系统主题');
+                        applySystemTheme();
+                        updateStatusInfo();
+                    }
+                }
+            }, 5000); // 每5秒检查一次
+            
+            if (autoTheme) {
+                // 自动模式：应用系统主题
+                console.log('自动模式，应用系统主题');
+                applySystemTheme();
+            } else {
+                // 手动模式：应用保存的主题
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                console.log('手动模式，应用保存的主题:', savedTheme);
+                document.body.setAttribute('data-theme', savedTheme);
+                updateThemeColors(savedTheme);
+            }
+        }
+
+        // 重定向控制台输出到页面
+        const originalConsoleLog = console.log;
+        const consoleOutput = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+            ).join(' ');
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            consoleOutput.appendChild(logEntry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+        
+        // 更新状态信息
+        function updateStatusInfo() {
+            const statusInfo = document.getElementById('status-info');
+            const autoTheme = localStorage.getItem('autoTheme') === 'true';
+            const currentTheme = document.body.getAttribute('data-theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            statusInfo.innerHTML = `
+                <p><strong>当前页面主题:</strong> ${currentTheme}</p>
+                <p><strong>自动模式:</strong> ${autoTheme ? '开启' : '关闭'}</p>
+                <p><strong>系统主题偏好:</strong> ${systemPrefersDark ? '暗色' : '亮色'}</p>
+                <p><strong>保存的主题:</strong> ${localStorage.getItem('theme') || 'light'}</p>
+            `;
+        }
+        
+        // 测试切换主题
+        function testToggleTheme() {
+            console.log('=== 测试手动切换主题 ===');
+            toggleTheme();
+            updateStatusInfo();
+        }
+        
+        // 测试切换自动/手动模式
+        function testToggleAutoTheme() {
+            console.log('=== 测试切换自动/手动模式 ===');
+            toggleAutoTheme();
+            updateStatusInfo();
+        }
+        
+        // 模拟系统主题变化
+        function testSystemThemeChange() {
+            console.log('=== 模拟系统主题变化 ===');
+            const currentSystemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const newSystemTheme = !currentSystemTheme;
+            
+            console.log('当前系统主题:', currentSystemTheme ? '暗色' : '亮色');
+            console.log('模拟切换到:', newSystemTheme ? '暗色' : '亮色');
+            
+            // 创建模拟事件对象
+            const mockEvent = {
+                matches: newSystemTheme,
+                media: '(prefers-color-scheme: dark)'
+            };
+            
+            // 触发主题变化处理
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            if (mediaQuery.addEventListener) {
+                // 触发监听器
+                const event = new Event('change');
+                event.matches = newSystemTheme;
+                mediaQuery.dispatchEvent(event);
+            }
+            
+            updateStatusInfo();
+        }
+        
+        // 清空控制台
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 页面加载完成 ===');
+            initTheme();
+            updateStatusInfo();
+            
+            // 监听主题变化
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'data-theme') {
+                        console.log('检测到页面主题变化:', document.body.getAttribute('data-theme'));
+                        updateStatusInfo();
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                attributes: true,
+                attributeFilter: ['data-theme']
+            });
+        });
+    </script>
+</body>
+</html>
