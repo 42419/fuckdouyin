@@ -1133,7 +1133,42 @@ function showUpdateModal(versionInfo) {
                 
                 version.changelog.forEach(item => {
                     const li = document.createElement('li');
-                    li.textContent = item;
+                    
+                    // 根据内容类型添加不同的样式类
+                    if (item.trim() === '') {
+                        // 空行，添加分隔样式
+                        li.className = 'changelog-separator';
+                        li.innerHTML = '<div class="separator-line"></div>';
+                    } else if (item.includes('===') || item.includes('【')) {
+                        // 标题或章节标题
+                        li.className = 'changelog-title';
+                        li.textContent = item;
+                    } else if (item.startsWith('•')) {
+                        // 列表项
+                        li.className = 'changelog-list-item';
+                        li.innerHTML = `<span class="list-bullet">•</span>${item.substring(1)}`;
+                    } else if (item.startsWith('新增') || item.includes('新增')) {
+                        // 新增功能
+                        li.className = 'changelog-new';
+                        li.innerHTML = `<span class="changelog-icon new-icon">✨</span>${item}`;
+                    } else if (item.startsWith('优化') || item.includes('优化')) {
+                        // 优化改进
+                        li.className = 'changelog-improve';
+                        li.innerHTML = `<span class="changelog-icon improve-icon">⚡</span>${item}`;
+                    } else if (item.startsWith('修复') || item.includes('修复')) {
+                        // 修复问题
+                        li.className = 'changelog-fix';
+                        li.innerHTML = `<span class="changelog-icon fix-icon">🐛</span>${item}`;
+                    } else if (item.startsWith('删除') || item.includes('删除')) {
+                        // 删除功能
+                        li.className = 'changelog-remove';
+                        li.innerHTML = `<span class="changelog-icon remove-icon">🗑️</span>${item}`;
+                    } else {
+                        // 普通文本
+                        li.className = 'changelog-text';
+                        li.textContent = item;
+                    }
+                    
                     versionList.appendChild(li);
                 });
                 
@@ -1151,7 +1186,42 @@ function showUpdateModal(versionInfo) {
             
             versionInfo.changelog.forEach(item => {
                 const li = document.createElement('li');
-                li.textContent = item;
+                
+                // 根据内容类型添加不同的样式类
+                if (item.trim() === '') {
+                    // 空行，添加分隔样式
+                    li.className = 'changelog-separator';
+                    li.innerHTML = '<div class="separator-line"></div>';
+                } else if (item.includes('===') || item.includes('【')) {
+                    // 标题或章节标题
+                    li.className = 'changelog-title';
+                    li.textContent = item;
+                } else if (item.startsWith('•')) {
+                    // 列表项
+                    li.className = 'changelog-list-item';
+                    li.innerHTML = `<span class="list-bullet">•</span>${item.substring(1)}`;
+                } else if (item.startsWith('新增') || item.includes('新增')) {
+                    // 新增功能
+                    li.className = 'changelog-new';
+                    li.innerHTML = `<span class="changelog-icon new-icon">✨</span>${item}`;
+                } else if (item.startsWith('优化') || item.includes('优化')) {
+                    // 优化改进
+                    li.className = 'changelog-improve';
+                    li.innerHTML = `<span class="changelog-icon improve-icon">⚡</span>${item}`;
+                } else if (item.startsWith('修复') || item.includes('修复')) {
+                    // 修复问题
+                    li.className = 'changelog-fix';
+                    li.innerHTML = `<span class="changelog-icon fix-icon">🐛</span>${item}`;
+                } else if (item.startsWith('删除') || item.includes('删除')) {
+                    // 删除功能
+                    li.className = 'changelog-remove';
+                    li.innerHTML = `<span class="changelog-icon remove-icon">🗑️</span>${item}`;
+                } else {
+                    // 普通文本
+                    li.className = 'changelog-text';
+                    li.textContent = item;
+                }
+                
                 currentList.appendChild(li);
             });
             
