@@ -1055,13 +1055,30 @@ let currentVersion = '1.0.0'; // 当前版本号
 // 检查更新
 async function checkForUpdates(forceShow = false) {
     try {
-        // 获取版本信息
-        const response = await fetch('/version.json?v=' + Date.now());
+        // 获取版本信息，添加时间戳和版本戳避免缓存
+        const response = await fetch('/version.json?v=' + Date.now() + '&version=1.1.3');
+        
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const versionInfo = await response.json();
         
         // 检查本地存储的版本号
         const lastVersion = localStorage.getItem('app_version');
         const lastUpdateTime = localStorage.getItem('last_update_check');
+        const cssVersion = localStorage.getItem('css_version');
+        
+        // 检查CSS版本，如果CSS版本不同，强制刷新页面
+        if (cssVersion !== '1.1.3') {
+            localStorage.setItem('css_version', '1.1.3');
+            // 如果CSS版本变化，强制重新加载页面以获取最新样式
+            if (cssVersion) {
+                window.location.reload();
+                return;
+            }
+        }
         
         // 如果是第一次访问或版本不同，显示更新提示
         if (!lastVersion || lastVersion !== versionInfo.version || forceShow) {

@@ -7,6 +7,12 @@
 /version.json
   Cache-Control: no-cache, no-store, must-revalidate
 
+/assets/css/*
+  Cache-Control: public, max-age=300, s-maxage=300
+
+/assets/js/*
+  Cache-Control: public, max-age=300, s-maxage=300
+
 /assets/*
   Cache-Control: public, max-age=3600, s-maxage=3600
 

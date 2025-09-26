@@ -9,6 +9,13 @@
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
 
-# 静态资源缓存时间稍长
+# CSS和JS文件缓存时间较短，便于样式更新
+/assets/css/*
+  Cache-Control: public, max-age=300, s-maxage=300
+
+/assets/js/*
+  Cache-Control: public, max-age=300, s-maxage=300
+
+# 其他静态资源缓存时间稍长
 /assets/*
   Cache-Control: public, max-age=3600, s-maxage=3600
