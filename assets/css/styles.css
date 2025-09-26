@@ -50,16 +50,18 @@ body {
 
 /* 移除背景装饰效果，使用纯色背景 */
 
-/* 头部样式 */
+/* 头部样式 - 毛玻璃效果 */
 header {
-    background: var(--bg-header);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     width: 100%;
     height: 72px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid var(--glass-border);
     animation: slideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -167,8 +169,8 @@ header {
 }
 
 .theme-toggle svg {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     color: var(--text-color);
     transition: var(--transition);
     /* 确保SVG不阻止按钮的点击事件 */
@@ -178,8 +180,8 @@ header {
 }
 
 .menu-toggle svg {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     fill: var(--text-color);
     transition: var(--transition);
     /* 确保SVG不阻止按钮的点击事件 */
@@ -419,28 +421,28 @@ header {
     
     .theme-toggle {
         display: block;
-        /* 确保与汉堡按钮大小完全一致 */
-        min-width: 48px;
-        min-height: 48px;
-        width: 48px;
-        height: 48px;
+        /* 减小按钮大小 */
+        min-width: 40px;
+        min-height: 40px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 12px;
+        padding: 8px;
     }
     
     .menu-toggle {
         display: block;
-        /* 确保与明暗切换按钮大小完全一致 */
-        min-width: 48px;
-        min-height: 48px;
-        width: 48px;
-        height: 48px;
+        /* 减小按钮大小 */
+        min-width: 40px;
+        min-height: 40px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 12px;
+        padding: 8px;
     }
     
     #banner {
