@@ -1260,6 +1260,9 @@ main {
     max-width: 900px;
     margin: 0 auto 80px;
     animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 @keyframes slideInUp {
@@ -1284,6 +1287,13 @@ main {
     transition: var(--transition);
     position: relative;
     overflow: hidden;
+    max-width: 100%;
+    margin: 0 auto !important;
+    width: 100%;
+    left: 0;
+    right: 0;
+    display: block;
+    text-align: center;
 }
 
 .result-container::before {
@@ -1648,12 +1658,20 @@ main {
 @media (max-width: 768px) {
     .result-section {
         margin: 0 12px 60px;
+        width: 100% !important; /* 确保占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
+        display: flex; /* 使用flex布局 */
+        flex-direction: column; /* 垂直排列子元素 */
+        align-items: center; /* 水平居中子元素 */
     }
     
     .result-container {
         padding: 20px 16px;
         border-radius: 12px;
-        margin: 0;
+        width: 100% !important; /* 确保容器占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .result-container h2 {
@@ -1696,10 +1714,14 @@ main {
         font-size: 12px;
     }
     
+    /* 手机端视频信息框加宽 */
     .video-info {
         padding: 16px;
         border-radius: 12px;
-        margin-bottom: 24px;
+        margin: 0 auto 24px !important; /* 使用自动左右边距实现居中，使用!important覆盖基础样式 */
+        width: 100% !important; /* 占据全部宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .video-info h3 {
@@ -1864,11 +1886,20 @@ main {
     
     .result-section {
         margin: 0 8px 40px;
+        width: 100% !important; /* 确保占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
+        display: flex; /* 使用flex布局 */
+        flex-direction: column; /* 垂直排列子元素 */
+        align-items: center; /* 水平居中子元素 */
     }
     
     .result-container {
         padding: 16px 12px;
         border-radius: 8px;
+        width: 100% !important; /* 确保容器占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .result-container h2 {
@@ -1880,6 +1911,12 @@ main {
         padding: 16px 12px;
         border-radius: 8px;
         margin-bottom: 16px;
+    }
+    
+    /* 确保main元素不限制内容宽度 */
+    main {
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        padding: 0 12px; /* 减少左右边距 */
     }
     
     .author-avatar {
@@ -1908,7 +1945,10 @@ main {
     .video-info {
         padding: 12px;
         border-radius: 8px;
-        margin-bottom: 16px;
+        margin: 0 auto 16px !important; /* 使用自动左右边距实现居中，使用!important覆盖基础样式 */
+        width: 100% !important; /* 占据全部宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .video-info h3 {
@@ -2041,6 +2081,12 @@ main {
     .loading-overlay p {
         font-size: 16px;
     }
+    
+    /* 确保main元素不限制内容宽度 */
+    main {
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        padding: 0 16px; /* 减少左右边距 */
+    }
 }
 
 /* 超小屏幕优化 (320px及以下) */
@@ -2063,19 +2109,38 @@ main {
     }
     
     .result-section {
-        margin: 0 4px 30px;
+        margin: 0 8px 30px;
+        width: 100% !important; /* 确保占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
+        display: flex; /* 使用flex布局 */
+        flex-direction: column; /* 垂直排列子元素 */
+        align-items: center; /* 水平居中子元素 */
     }
     
     .result-container {
         padding: 12px 8px;
+        width: 100% !important; /* 确保容器占据全部可用宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .author-info {
         padding: 12px 8px;
     }
     
+    /* 确保main元素不限制内容宽度 */
+    main {
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        padding: 0 8px; /* 进一步减少左右边距 */
+    }
+    
     .video-info {
         padding: 8px;
+        margin: 0 auto 16px !important; /* 使用自动左右边距实现居中，使用!important覆盖基础样式 */
+        width: 100% !important; /* 超小屏幕占据全部宽度，使用!important覆盖基础样式 */
+        max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
+        box-sizing: border-box; /* 确保padding不会增加总宽度 */
     }
     
     .download-link {
