@@ -116,6 +116,9 @@
         // 页面加载完成后检查更新
         document.addEventListener('DOMContentLoaded', function () {
             checkForUpdates();
+            
+            // 检测并显示抖音浏览器提示
+            showDouyinBrowserHint();
 
             // 添加版本号点击事件
             const versionLink = document.getElementById('versionLink');

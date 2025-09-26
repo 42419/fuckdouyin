@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浏览器检测测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .info-box {
+            background: #f5f5f5;
+            border-left: 4px solid #007cba;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .douyin-detected {
+            background: #fff0f0;
+            border-left: 4px solid #ff0050;
+        }
+        .test-button {
+            background: #007cba;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .test-button:hover {
+            background: #005a87;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>抖音浏览器检测测试</h1>
+    
+    <div class="info-box">
+        <h3>📱 抖音浏览器特征</h3>
+        <p>本页面可以检测以下抖音浏览器特征：</p>
+        <ul>
+            <li>用户代理字符串包含 "aweme"（抖音App标识）</li>
+            <li>用户代理字符串包含 "tiktok"（TikTok标识）</li>
+            <li>用户代理字符串包含 "musically"（抖音前身）</li>
+            <li>用户代理字符串包含 "bytedance"（字节跳动）</li>
+            <li>用户代理字符串包含 "douyin"（抖音）</li>
+            <li>抖音WebView特定标识</li>
+        </ul>
+    </div>
+
+    <button class="test-button" onclick="runBrowserTest()">🔍 检测当前浏览器</button>
+    
+    <div id="testResult" class="result" style="display: none;">
+        <h3>检测结果</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <div class="info-box">
+        <h3>💡 使用说明</h3>
+        <p>1. 在普通浏览器中打开此页面，会显示"非抖音浏览器"</p>
+        <p>2. 在抖音App内置浏览器中打开此页面，会显示"抖音浏览器"</p>
+        <p>3. 检测结果会显示详细的用户代理信息</p>
+    </div>
+
+    <script>
+        // 检测是否为抖音内置浏览器
+        function isDouyinBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            // 抖音浏览器特征字符串
+            const douyinPatterns = [
+                'aweme',           // 抖音App
+                'tiktok',          // TikTok
+                'musically',       // Musical.ly（抖音前身）
+                'bytedance',       // 字节跳动
+                'douyin',          // 抖音
+                'aweme-internal',  // 抖音内部版本
+                'aweme-download'   // 抖音下载相关
+            ];
+            
+            // 检查用户代理字符串是否包含抖音特征
+            for (const pattern of douyinPatterns) {
+                if (userAgent.includes(pattern)) {
+                    return true;
+                }
+            }
+            
+            // 检查特定的抖音浏览器标识
+            if (userAgent.includes('aweme') && userAgent.includes('version')) {
+                return true;
+            }
+            
+            // 检查抖音WebView特征
+            if (userAgent.includes('webview') && 
+                (userAgent.includes('aweme') || userAgent.includes('douyin'))) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // 获取浏览器详细信息
+        function getBrowserInfo() {
+            const userAgent = navigator.userAgent;
+            const isDouyin = isDouyinBrowser();
+            
+            return {
+                userAgent: userAgent,
+                isDouyinBrowser: isDouyin,
+                browserName: isDouyin ? '抖音浏览器' : getBrowserName(userAgent),
+                platform: navigator.platform,
+                language: navigator.language
+            };
+        }
+
+        // 获取普通浏览器名称
+        function getBrowserName(userAgent) {
+            if (userAgent.includes('Chrome')) return 'Chrome';
+            if (userAgent.includes('Firefox')) return 'Firefox';
+            if (userAgent.includes('Safari')) return 'Safari';
+            if (userAgent.includes('Edge')) return 'Edge';
+            if (userAgent.includes('Opera')) return 'Opera';
+            return '未知浏览器';
+        }
+
+        // 运行浏览器测试
+        function runBrowserTest() {
+            const browserInfo = getBrowserInfo();
+            const resultDiv = document.getElementById('resultContent');
+            const resultContainer = document.getElementById('testResult');
+            
+            let resultHTML = `
+                <div class="${browserInfo.isDouyinBrowser ? 'douyin-detected' : ''}">
+                    <h4>${browserInfo.isDouyinBrowser ? '🎯 检测到抖音浏览器' : '✅ 非抖音浏览器'}</h4>
+                    <p><strong>浏览器类型：</strong> ${browserInfo.browserName}</p>
+                    <p><strong>平台：</strong> ${browserInfo.platform}</p>
+                    <p><strong>语言：</strong> ${browserInfo.language}</p>
+                    <p><strong>用户代理：</strong></p>
+                    <textarea style="width: 100%; height: 100px; margin-top: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;" readonly>${browserInfo.userAgent}</textarea>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = resultHTML;
+            resultContainer.style.display = 'block';
+        }
+
+        // 页面加载时自动检测
+        document.addEventListener('DOMContentLoaded', function() {
+            // 延迟一点显示结果，让页面完全加载
+            setTimeout(runBrowserTest, 500);
+        });
+    </script>
+</body>
+</html>
