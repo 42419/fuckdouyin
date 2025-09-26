@@ -144,13 +144,7 @@
                     themeToggle.setAttribute('title', title);
                 });
                 
-                // 页面加载时显示当前模式状态
-                setTimeout(() => {
-                    const autoTheme = localStorage.getItem('autoTheme') === 'true';
-                    if (autoTheme) {
-                        showAutoModeHint('当前为自动模式，将跟随系统主题变化');
-                    }
-                }, 1000);
+                // 页面加载时不显示自动模式提示，只在用户切换时显示
             }
         });
     </script>
