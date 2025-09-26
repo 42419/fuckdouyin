@@ -1503,9 +1503,9 @@ main {
 
 .download-links {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 12px;
-    justify-content: center;
+    align-items: center;
 }
 
 .download-link {
@@ -1515,11 +1515,15 @@ main {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: var(--text-white);
     padding: 12px 24px;
-    border-radius: var(--border-radius);
+    border-radius: 8px;
     text-decoration: none;
     font-weight: 600;
     transition: var(--transition);
     box-shadow: var(--shadow-card);
+    /* 设置固定宽度确保所有按钮长度相同 */
+    min-width: 280px;
+    width: 100%;
+    max-width: 320px;
     /* 在桌面端保持不换行 */
     white-space: nowrap;
     /* 防止文本溢出 */
@@ -1527,6 +1531,7 @@ main {
     text-overflow: ellipsis;
     position: relative;
     animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
 }
 
 .download-link::before {
