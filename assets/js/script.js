@@ -547,27 +547,49 @@ function updateThemeColors(theme) {
     if (theme === 'dark') {
         root.style.setProperty('--text-color', '#ffffff');
         root.style.setProperty('--text-light', '#d1d5db');
-        root.style.setProperty('--bg-header', '#0f172a');
-        root.style.setProperty('--bg-menu', '#1e293b');
-        root.style.setProperty('--bg-main', '#0f172a');
-        root.style.setProperty('--bg-card', '#1e293b');
-        root.style.setProperty('--glass-bg', 'rgba(30, 41, 59, 0.8)');
+        root.style.setProperty('--bg-header', '#1A1A1A');
+        root.style.setProperty('--bg-menu', '#2D2A2E');
+        root.style.setProperty('--bg-main', '#1A1A1A');
+        root.style.setProperty('--bg-card', '#2D2A2E');
+        root.style.setProperty('--glass-bg', 'rgba(45, 42, 46, 0.8)');
         root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.1)');
         root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.3)');
         root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.4)');
         root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.2)');
+        
+        // 更新内容框字体样式 - 暗色模式
+        root.style.setProperty('--update-modal-text-color', '#ffffff');
+        root.style.setProperty('--update-modal-text-light', '#d1d5db');
+        root.style.setProperty('--update-modal-title-color', '#ffffff');
+        root.style.setProperty('--update-modal-list-color', '#d1d5db');
+        root.style.setProperty('--update-modal-new-color', '#ffffff');
+        root.style.setProperty('--update-modal-improve-color', '#ffffff');
+        root.style.setProperty('--update-modal-fix-color', '#ffffff');
+        root.style.setProperty('--update-modal-remove-color', '#d1d5db');
+        root.style.setProperty('--update-modal-text-bg-color', 'rgba(45, 42, 46, 0.8)');
     } else {
-        root.style.setProperty('--text-color', '#1f2937');
-        root.style.setProperty('--text-light', '#6b7280');
-        root.style.setProperty('--bg-header', '#ffffff');
-        root.style.setProperty('--bg-menu', '#f8fafc');
-        root.style.setProperty('--bg-main', '#ffffff');
-        root.style.setProperty('--bg-card', '#ffffff');
-        root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
-        root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.1)');
-        root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.1)');
-        root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.15)');
-        root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.08)');
+        root.style.setProperty('--text-color', '#2D2A2E');
+        root.style.setProperty('--text-light', '#6D6B6E');
+        root.style.setProperty('--bg-header', '#FFFCEE');
+        root.style.setProperty('--bg-menu', '#FFFDF5');
+        root.style.setProperty('--bg-main', '#FFFCEE');
+        root.style.setProperty('--bg-card', '#FFFCEE');
+        root.style.setProperty('--glass-bg', 'rgba(255, 252, 238, 0.9)');
+        root.style.setProperty('--glass-border', 'rgba(45, 42, 46, 0.1)');
+        root.style.setProperty('--shadow', '0 8px 32px rgba(45, 42, 46, 0.1)');
+        root.style.setProperty('--shadow-hover', '0 12px 40px rgba(45, 42, 46, 0.15)');
+        root.style.setProperty('--shadow-card', '0 4px 20px rgba(45, 42, 46, 0.08)');
+        
+        // 更新内容框字体样式 - 亮色模式
+        root.style.setProperty('--update-modal-text-color', '#2D2A2E');
+        root.style.setProperty('--update-modal-text-light', '#6D6B6E');
+        root.style.setProperty('--update-modal-title-color', '#7B3306');
+        root.style.setProperty('--update-modal-list-color', '#6D6B6E');
+        root.style.setProperty('--update-modal-new-color', '#2D2A2E');
+        root.style.setProperty('--update-modal-improve-color', '#2D2A2E');
+        root.style.setProperty('--update-modal-fix-color', '#2D2A2E');
+        root.style.setProperty('--update-modal-remove-color', '#6D6B6E');
+        root.style.setProperty('--update-modal-text-bg-color', 'rgba(255, 252, 238, 0.9)');
     }
 }
 
@@ -1410,49 +1432,48 @@ function showUpdateModal(versionInfo) {
                 changelogList.appendChild(versionTitle);
                 
                 // 创建更新列表
-                const versionList = document.createElement('ul');
-                versionList.className = 'version-changelog';
+            const versionList = document.createElement('ul');
+            versionList.className = 'version-changelog';
+            
+            version.changelog.forEach(item => {
+                const li = document.createElement('li');
                 
-                version.changelog.forEach(item => {
-                    const li = document.createElement('li');
-                    
-                    // 根据内容类型添加不同的样式类
-                    if (item.trim() === '') {
-                        // 空行，添加分隔样式
-                        li.className = 'changelog-separator';
-                        li.innerHTML = '<div class="separator-line"></div>';
-                    } else if (item.includes('===') || item.includes('【')) {
-                        // 标题或章节标题
-                        li.className = 'changelog-title';
-                        li.textContent = item;
-                    } else if (item.startsWith('•')) {
-                        // 列表项
-                        li.className = 'changelog-list-item';
-                        li.innerHTML = `<span class="list-bullet">•</span>${item.substring(1)}`;
-                    } else if (item.startsWith('新增') || item.includes('新增')) {
-                        // 新增功能
-                        li.className = 'changelog-new';
-                        li.innerHTML = `<span class="changelog-icon new-icon">✨</span>${item}`;
-                    } else if (item.startsWith('优化') || item.includes('优化')) {
-                        // 优化改进
-                        li.className = 'changelog-improve';
-                        li.innerHTML = `<span class="changelog-icon improve-icon">⚡</span>${item}`;
-                    } else if (item.startsWith('修复') || item.includes('修复')) {
-                        // 修复问题
-                        li.className = 'changelog-fix';
-                        li.innerHTML = `<span class="changelog-icon fix-icon">🐛</span>${item}`;
-                    } else if (item.startsWith('删除') || item.includes('删除')) {
-                        // 删除功能
-                        li.className = 'changelog-remove';
-                        li.innerHTML = `<span class="changelog-icon remove-icon">🗑️</span>${item}`;
-                    } else {
-                        // 普通文本
-                        li.className = 'changelog-text';
-                        li.textContent = item;
-                    }
-                    
-                    versionList.appendChild(li);
-                });
+                // 根据内容类型添加不同的样式类
+                if (item.trim() === '') {
+                    // 空行，添加分隔样式
+                    li.className = 'changelog-separator';
+                } else if (item.includes('===') || item.includes('【')) {
+                    // 标题或章节标题
+                    li.className = 'changelog-title';
+                    li.textContent = item;
+                } else if (item.startsWith('•')) {
+                    // 列表项
+                    li.className = 'changelog-list-item';
+                    li.innerHTML = `<span class="list-bullet">•</span>${item.substring(1)}`;
+                } else if (item.includes('新增') || item.includes('新功能') || item.includes('增加')) {
+                    // 新增功能
+                    li.className = 'changelog-new';
+                    li.innerHTML = `<span class="changelog-icon new-icon">✨</span>${item}`;
+                } else if (item.includes('优化') || item.includes('改进') || item.includes('提升') || item.includes('增强')) {
+                    // 优化改进
+                    li.className = 'changelog-improve';
+                    li.innerHTML = `<span class="changelog-icon improve-icon">⚡</span>${item}`;
+                } else if (item.includes('修复') || item.includes('解决') || item.includes('更正')) {
+                    // 修复问题
+                    li.className = 'changelog-fix';
+                    li.innerHTML = `<span class="changelog-icon fix-icon">🐛</span>${item}`;
+                } else if (item.includes('删除') || item.includes('移除')) {
+                    // 删除功能
+                    li.className = 'changelog-remove';
+                    li.innerHTML = `<span class="changelog-icon remove-icon">🗑️</span>${item}`;
+                } else {
+                    // 普通文本
+                    li.className = 'changelog-text';
+                    li.textContent = item;
+                }
+                
+                versionList.appendChild(li);
+            });
                 
                 changelogList.appendChild(versionList);
             });
@@ -1473,7 +1494,6 @@ function showUpdateModal(versionInfo) {
                 if (item.trim() === '') {
                     // 空行，添加分隔样式
                     li.className = 'changelog-separator';
-                    li.innerHTML = '<div class="separator-line"></div>';
                 } else if (item.includes('===') || item.includes('【')) {
                     // 标题或章节标题
                     li.className = 'changelog-title';
@@ -1482,19 +1502,19 @@ function showUpdateModal(versionInfo) {
                     // 列表项
                     li.className = 'changelog-list-item';
                     li.innerHTML = `<span class="list-bullet">•</span>${item.substring(1)}`;
-                } else if (item.startsWith('新增') || item.includes('新增')) {
+                } else if (item.includes('新增') || item.includes('新功能') || item.includes('增加')) {
                     // 新增功能
                     li.className = 'changelog-new';
                     li.innerHTML = `<span class="changelog-icon new-icon">✨</span>${item}`;
-                } else if (item.startsWith('优化') || item.includes('优化')) {
+                } else if (item.includes('优化') || item.includes('改进') || item.includes('提升') || item.includes('增强')) {
                     // 优化改进
                     li.className = 'changelog-improve';
                     li.innerHTML = `<span class="changelog-icon improve-icon">⚡</span>${item}`;
-                } else if (item.startsWith('修复') || item.includes('修复')) {
+                } else if (item.includes('修复') || item.includes('解决') || item.includes('更正')) {
                     // 修复问题
                     li.className = 'changelog-fix';
                     li.innerHTML = `<span class="changelog-icon fix-icon">🐛</span>${item}`;
-                } else if (item.startsWith('删除') || item.includes('删除')) {
+                } else if (item.includes('删除') || item.includes('移除')) {
                     // 删除功能
                     li.className = 'changelog-remove';
                     li.innerHTML = `<span class="changelog-icon remove-icon">🗑️</span>${item}`;
@@ -1719,57 +1739,87 @@ function displayVideoData(data) {
     // 构建结果HTML - 安全地访问可能不存在的字段
     resultContainer.innerHTML = `
         <div class="result-container">
-            <h2>视频信息</h2>
-            
-            <!-- 作者信息 -->
-            <div class="author-info">
-                <img src="${avatarUrl}" alt="作者头像" class="author-avatar">
-                <div class="author-details">
-                    <h3>${nickname}</h3>
-                    <p>${signature.replace(/\n/g, '<br>')}</p>
-                    <div class="author-stats">
-                        <span>粉丝: ${formatNumber(followerCount)}</span>
-                        <span>获赞: ${formatNumber(totalFavorited)}</span>
+            <!-- 视频信息区域 -->
+            <div class="video-details">
+                <!-- 作者信息 -->
+                <div class="author-info">
+                    <div class="author-info-left">
+                        <img src="${avatarUrl}" alt="作者头像" class="author-avatar">
+                        <div class="author-details">
+                            <h3>${nickname}</h3>
+                            <p>${signature.replace(/\n/g, '<br>')}</p>
+                            <div class="author-stats">
+                                <span>粉丝: ${formatNumber(followerCount)}</span>
+                                <span>获赞: ${formatNumber(totalFavorited)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="author-info-right">
+                        <!-- 发布时间 -->
+                        <div class="publish-time">
+                            <svg t="1758971042738" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="10456" width="16" height="16">
+                                <path d="M512 1024c-281.6 0-512-230.4-512-512s230.4-512 512-512 512 230.4 512 512-230.4 512-512 512zM512 115.2C294.4 115.2 115.2 294.4 115.2 512c0 217.6 179.2 396.8 396.8 396.8s396.8-179.2 396.8-396.8c0-217.6-179.2-396.8-396.8-396.8z m140.8 620.8c-12.8 0-25.6-6.4-38.4-12.8L473.6 576c-12.8-6.4-19.2-25.6-19.2-38.4v-192c0-32 25.6-57.6 57.6-57.6s57.6 25.6 57.6 57.6V512l128 128c19.2 19.2 19.2 57.6 0 76.8-12.8 12.8-25.6 19.2-44.8 19.2z" fill="#646F79" p-id="10457"></path>
+                            </svg>
+                            <span>${createTime}</span>
+                        </div>
+                        
+                        <!-- 视频统计数据 -->
+                        <div class="video-stats">
+                            <div class="stat-item">
+                                <svg t="1758970932028" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1024" width="16" height="16">
+                                    <path d="M512 1024C229.248 1024 0 794.752 0 512S229.248 0 512 0s512 229.248 512 512-229.248 512-512 512z m0-960C264.96 64 64 264.96 64 512s200.96 448 448 448 448-200.96 448-448S759.04 64 512 64z m0 832c-211.744 0-384-172.256-384-384s172.256-384 384-384 384 172.256 384 384-172.256 384-384 384z m192-576c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m-384 0c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m192 576c-123.52 0-224-100.48-224-224s100.48-224 224-224 224 100.48 224 224-100.48 224-224 224z" fill="#FF6B6B" p-id="1025"></path>
+                                </svg>
+                                <span class="stat-value">${formatNumber(diggCount)}</span>
+                                <span class="stat-label">点赞</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg t="1758970952388" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1192" width="16" height="16">
+                                    <path d="M512 1024C229.248 1024 0 794.752 0 512S229.248 0 512 0s512 229.248 512 512-229.248 512-512 512z m0-960C264.96 64 64 264.96 64 512s200.96 448 448 448 448-200.96 448-448S759.04 64 512 64z m0 832c-211.744 0-384-172.256-384-384s172.256-384 384-384 384 172.256 384 384-172.256 384-384 384z m192-576c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m-384 0c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m192 576c-123.52 0-224-100.48-224-224s100.48-224 224-224 224 100.48 224 224-100.48 224-224 224z" fill="#4ECDC4" p-id="1193"></path>
+                                </svg>
+                                <span class="stat-value">${formatNumber(commentCount)}</span>
+                                <span class="stat-label">评论</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg t="1758970962458" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1360" width="16" height="16">
+                                    <path d="M512 1024C229.248 1024 0 794.752 0 512S229.248 0 512 0s512 229.248 512 512-229.248 512-512 512z m0-960C264.96 64 64 264.96 64 512s200.96 448 448 448 448-200.96 448-448S759.04 64 512 64z m0 832c-211.744 0-384-172.256-384-384s172.256-384 384-384 384 172.256 384 384-172.256 384-384 384z m192-576c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m-384 0c-17.664 0-32 14.336-32 32s14.336 32 32 32 32-14.336 32-32-14.336-32-32-32z m192 576c-123.52 0-224-100.48-224-224s100.48-224 224-224 224 100.48 224 224-100.48 224-224 224z" fill="#FFD93D" p-id="1361"></path>
+                                </svg>
+                                <span class="stat-value">${formatNumber(collectCount)}</span>
+                                <span class="stat-label">收藏</span>
+                            </div>
+                            <div class="stat-item">
+                                <svg t="1758970974923" class="icon" viewBox="0 0 1236 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="8506" width="16" height="16">
+                                    <path d="M741.743 1018.343c-28.287 0-50.917-11.315-73.547-28.288-22.63-22.63-39.602-50.917-39.602-84.862V792.044c-124.464 0-328.133 33.945-435.624 181.039-16.973 28.287-56.575 45.26-90.52 50.917H85.478C28.903 1012.685-5.042 961.768 0.616 905.193c28.287-243.27 113.15-418.652 260.243-537.458 107.492-84.862 231.956-130.122 367.735-141.437V118.807c0-50.917 22.63-96.177 67.89-113.15C736.086-5.657 781.345 0 815.29 33.945l362.077 367.735c28.288 22.63 45.26 56.574 50.918 96.176 5.657 39.603-5.658 79.205-33.945 107.492-5.658 5.658-11.315 16.972-22.63 22.63l-350.762 356.42c-22.63 22.63-50.918 33.945-79.205 33.945z m-90.52-339.448h90.52v226.298l356.42-367.734 5.658-5.658c5.657-5.657 5.657-16.972 5.657-22.63 0-11.315-5.657-16.972-11.315-22.63l-5.657-5.657-356.42-362.077V333.79l-79.205 5.658c-118.806 0-231.956 39.602-328.132 113.149-113.15 90.519-186.696 237.613-209.326 429.967 141.436-175.382 390.364-203.669 531.8-203.669z" p-id="8507"></path>
+                                </svg>
+                                <span class="stat-value">${formatNumber(shareCount)}</span>
+                                <span class="stat-label">分享</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- 视频基本信息 -->
-            <div class="video-info">
-                <h3>视频详情</h3>
-                <p><strong>标题:</strong> ${videoTitle}</p>
-                <p><strong>发布时间:</strong> ${createTime}</p>
-                <p><strong>时长:</strong> ${duration}秒</p>
-            </div>
-            
-            <!-- 视频统计数据 -->
-            <div class="video-stats">
-                <div class="stat-item">
-                    <span class="stat-label">点赞</span>
-                    <span class="stat-value">${formatNumber(diggCount)}</span>
+                
+                <!-- 视频标题 -->
+                <div class="video-title">
+                    <p>${videoTitle}</p>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">评论</span>
-                    <span class="stat-value">${formatNumber(commentCount)}</span>
+                
+                <!-- 分辨率选项 -->
+                <div class="resolution-options">
+                    <!-- 分辨率选项将由JS动态填充 -->
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">收藏</span>
-                    <span class="stat-value">${formatNumber(collectCount)}</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">分享</span>
-                    <span class="stat-value">${formatNumber(shareCount)}</span>
-                </div>
-            </div>
-            
-            
-            <!-- 视频下载选项 - 适配fetch_one_video接口 -->
-            <div class="download-options">
-                <h3>下载选项</h3>
-                ${generateDownloadOptions(videoDetail)}
+                
+
             </div>
         </div>
     `;
+    
+    // 生成下载选项
+    const downloadOptionsHtml = generateDownloadOptions(videoDetail);
+    
+    // 将下载选项添加到分辨率选项区域
+    const resolutionOptions = resultContainer.querySelector('.resolution-options');
+    if (resolutionOptions && downloadOptionsHtml) {
+        resolutionOptions.innerHTML = downloadOptionsHtml;
+    }
 }
 
 // 根据Python脚本的逻辑实现

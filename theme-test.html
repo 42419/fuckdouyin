@@ -18,8 +18,8 @@
         }
         
         body[data-theme="light"] {
-            background-color: #ffffff;
-            color: #333333;
+            background-color: #FFFCEE;
+            color: #2D2A2E;
         }
         
         .test-container {
@@ -44,8 +44,9 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            background-color: #007bff;
-            color: white;
+            background-color: #F5F0E1;
+            color: #2D2A2E;
+            border: 1px solid #EDE8D9;
         }
         
         button:hover {
@@ -147,27 +148,27 @@
             if (theme === 'dark') {
                 root.style.setProperty('--text-color', '#ffffff');
                 root.style.setProperty('--text-light', '#d1d5db');
-                root.style.setProperty('--bg-header', '#0f172a');
-                root.style.setProperty('--bg-menu', '#1e293b');
-                root.style.setProperty('--bg-main', '#0f172a');
-                root.style.setProperty('--bg-card', '#1e293b');
-                root.style.setProperty('--glass-bg', 'rgba(30, 41, 59, 0.8)');
+                root.style.setProperty('--bg-header', '#1A1A1A');
+                root.style.setProperty('--bg-menu', '#2D2A2E');
+                root.style.setProperty('--bg-main', '#1A1A1A');
+                root.style.setProperty('--bg-card', '#2D2A2E');
+                root.style.setProperty('--glass-bg', 'rgba(45, 42, 46, 0.8)');
                 root.style.setProperty('--glass-border', 'rgba(255, 255, 255, 0.1)');
                 root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.3)');
                 root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.4)');
                 root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.2)');
             } else {
-                root.style.setProperty('--text-color', '#1f2937');
-                root.style.setProperty('--text-light', '#6b7280');
-                root.style.setProperty('--bg-header', '#ffffff');
-                root.style.setProperty('--bg-menu', '#f8fafc');
-                root.style.setProperty('--bg-main', '#ffffff');
-                root.style.setProperty('--bg-card', '#ffffff');
-                root.style.setProperty('--glass-bg', 'rgba(255, 255, 255, 0.9)');
-                root.style.setProperty('--glass-border', 'rgba(0, 0, 0, 0.1)');
-                root.style.setProperty('--shadow', '0 8px 32px rgba(0, 0, 0, 0.1)');
-                root.style.setProperty('--shadow-hover', '0 12px 40px rgba(0, 0, 0, 0.15)');
-                root.style.setProperty('--shadow-card', '0 4px 20px rgba(0, 0, 0, 0.08)');
+                root.style.setProperty('--text-color', '#2D2A2E');
+                root.style.setProperty('--text-light', '#6D6B6E');
+                root.style.setProperty('--bg-header', '#FFFCEE');
+                root.style.setProperty('--bg-menu', '#FFFDF5');
+                root.style.setProperty('--bg-main', '#FFFCEE');
+                root.style.setProperty('--bg-card', '#FFFCEE');
+                root.style.setProperty('--glass-bg', 'rgba(255, 252, 238, 0.9)');
+                root.style.setProperty('--glass-border', 'rgba(45, 42, 46, 0.1)');
+                root.style.setProperty('--shadow', '0 8px 32px rgba(45, 42, 46, 0.1)');
+                root.style.setProperty('--shadow-hover', '0 12px 40px rgba(45, 42, 46, 0.15)');
+                root.style.setProperty('--shadow-card', '0 4px 20px rgba(45, 42, 46, 0.08)');
             }
         }
 

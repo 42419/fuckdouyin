@@ -1,34 +1,38 @@
 :root {
-    --primary-color: #6366f1;
-    /* 主色调：现代紫蓝 */
-    --primary-light: #818cf8;
-    --primary-dark: #4f46e5;
-    --hover-color: #3730a3;
+    --primary-color: #FFFCEE;
+    /* 主色调：浅米色/奶油色 */
+    --primary-light: #FFFDF5;
+    --primary-dark: #F5F0E1;
+    --hover-color: #EDE8D9;
     /* 悬停色 */
-    --bg-header: rgba(255, 255, 255, 0.95);
+    --bg-header: rgba(255, 252, 238, 0.95);
     /* 头部背景 - 半透明 */
-    --bg-menu: rgba(255, 255, 255, 0.98);
+    --bg-menu: rgba(255, 252, 238, 0.98);
     /* 菜单背景 */
-    --bg-main: linear-gradient(135deg, #1e3a8a 0%, #3730a3 25%, #6366f1 50%, #8b5cf6 75%, #a855f7 100%);
-    /* 主背景渐变 - 深蓝到紫色 */
-    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-main: linear-gradient(135deg, #FFFDF5 0%, #FFFCEE 25%, #F9F6E7 50%, #F5F0E1 75%, #EDE8D9 100%);
+    /* 主背景渐变 - 浅米色系渐变 */
+    --bg-card: rgba(255, 252, 238, 0.95);
     /* 卡片背景 */
-    --text-color: #1f2937;
-    /* 主文字色 */
-    --text-light: #6b7280;
+    --bg-hover: rgba(79, 70, 229, 0.08);
+    /* 悬停背景色 */
+    --bg-active: rgba(79, 70, 229, 0.12);
+    /* 激活状态背景色 */
+    --text-color: #7B3306;
+    /* 主文字色 - 深棕色 */
+    --text-light: #6D6B6E;
     /* 浅色文字 */
-    --text-white: #ffffff;
-    /* 白色文字 */
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
-    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    --text-white: #2D2A2E;
+    /* 深色文字（用于浅色背景） */
+    --shadow: 0 8px 32px rgba(45, 42, 46, 0.1);
+    --shadow-hover: 0 12px 40px rgba(45, 42, 46, 0.15);
+    --shadow-card: 0 4px 20px rgba(45, 42, 46, 0.08);
     --border-radius: 16px;
     --border-radius-small: 8px;
     --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     --max-width: 1200px;
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-bg: rgba(255, 252, 238, 0.1);
+    --glass-border: rgba(255, 252, 238, 0.2);
 }
 
 * {
@@ -100,15 +104,15 @@ header {
 
 .logo:hover {
     transform: scale(1.05);
-    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
+    filter: drop-shadow(0 0 10px rgba(255, 252, 238, 0.3));
 }
 
 @keyframes logoGlow {
     0% {
-        filter: drop-shadow(0 0 5px rgba(99, 102, 241, 0.2));
+        filter: drop-shadow(0 0 5px rgba(255, 252, 238, 0.2));
     }
     100% {
-        filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));
+        filter: drop-shadow(0 0 15px rgba(255, 252, 238, 0.4));
     }
 }
 
@@ -298,6 +302,7 @@ header {
 }
 
 #banner li a:hover {
+    /* 使用与标题相同的颜色处理方法 */
     color: var(--primary-color);
 }
 
@@ -308,6 +313,7 @@ header {
     left: 0;
     width: 0;
     height: 3px;
+    /* 使用与标题相同的颜色处理方法 */
     background-color: var(--primary-color);
     transition: var(--transition);
     border-radius: 3px 3px 0 0;
@@ -317,13 +323,201 @@ header {
     width: 100%;
 }
 
+/* 明亮模式下的banner栏悬停状态样式 */
+@media (prefers-color-scheme: light) {
+    #banner li a:hover {
+        color: #2D2A2E;
+    }
+    
+    #banner li a:hover::after {
+        background-color: #2D2A2E;
+    }
+}
+
+/* 手动切换到明亮模式时的banner栏悬停状态样式 */
+body[data-theme="light"] #banner li a:hover {
+    color: #2D2A2E;
+}
+
+body[data-theme="light"] #banner li a:hover::after {
+    background-color: #2D2A2E;
+}
+
+/* 黑暗模式下的banner栏悬停状态样式 */
+@media (prefers-color-scheme: dark) {
+    #banner li a:hover {
+        color: var(--primary-color);
+    }
+    
+    #banner li a:hover::after {
+        background-color: var(--primary-color);
+    }
+}
+
+/* 手动切换到黑暗模式时的banner栏悬停状态样式 */
+body[data-theme="dark"] #banner li a:hover {
+    color: var(--primary-color);
+}
+
+body[data-theme="dark"] #banner li a:hover::after {
+    background-color: var(--primary-color);
+}
+
+/* 明亮模式下的背景色变量适配 */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-hover: rgba(45, 42, 46, 0.08);
+        --bg-active: rgba(45, 42, 46, 0.12);
+    }
+}
+
+/* 手动切换到明亮模式时的背景色变量适配 */
+body[data-theme="light"] {
+    --bg-hover: rgba(45, 42, 46, 0.08);
+    --bg-active: rgba(45, 42, 46, 0.12);
+}
+
+/* 黑暗模式下的背景色变量适配 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-hover: rgba(255, 252, 238, 0.08);
+        --bg-active: rgba(255, 252, 238, 0.12);
+    }
+}
+
+/* 手动切换到黑暗模式时的背景色变量适配 */
+body[data-theme="dark"] {
+    --bg-hover: rgba(255, 252, 238, 0.08);
+    --bg-active: rgba(255, 252, 238, 0.12);
+    --bg-card: rgba(45, 42, 46, 0.95);
+    --text-color: #FFFCEE;
+    --glass-border: rgba(255, 252, 238, 0.2);
+}
+
 #banner li a.active {
+    /* 使用与标题相同的颜色处理方法 */
     color: var(--primary-color);
     font-weight: 600;
 }
 
 #banner li a.active::after {
     width: 100%;
+    /* 使用与标题相同的颜色处理方法 */
+    background-color: var(--primary-color);
+}
+
+/* 明亮模式下的banner栏选中状态样式 */
+@media (prefers-color-scheme: light) {
+    #banner li a.active {
+        color: #2D2A2E;
+    }
+    
+    #banner li a.active::after {
+        background-color: #2D2A2E;
+    }
+}
+
+/* 手动切换到明亮模式时的banner栏选中状态样式 */
+body[data-theme="light"] #banner li a.active {
+    color: #2D2A2E;
+}
+
+body[data-theme="light"] #banner li a.active::after {
+    background-color: #2D2A2E;
+}
+
+/* 黑暗模式下的banner栏选中状态样式 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-card: rgba(45, 42, 46, 0.95);
+        --text-color: #FFFCEE;
+        --glass-border: rgba(255, 252, 238, 0.2);
+    }
+    
+    #banner li a.active {
+        color: var(--primary-color);
+    }
+    
+    #banner li a.active::after {
+        background-color: var(--primary-color);
+    }
+}
+
+/* 手动切换到黑暗模式时的banner栏选中状态样式 */
+body[data-theme="dark"] #banner li a.active {
+    color: var(--primary-color);
+}
+
+body[data-theme="dark"] #banner li a.active::after {
+    background-color: var(--primary-color);
+}
+
+/* 暗色模式下的按钮样式 */
+body[data-theme="dark"] .download-btn {
+    background-color: #FEE685;
+    color: #2D2A2E;
+}
+
+body[data-theme="dark"] .download-btn:hover {
+    background-color: #FDF2B8;
+}
+
+@media (prefers-color-scheme: dark) {
+    .download-btn {
+        background-color: #FEE685;
+        color: #2D2A2E;
+    }
+    
+    .download-btn:hover {
+        background-color: #FDF2B8;
+    }
+    
+    /* 暗色模式下的分辨率选项下载链接样式 */
+    .resolution-options .download-link {
+        background-color: rgba(45, 42, 46, 0.95);
+        border-color: rgba(255, 252, 238, 0.2);
+        color: #FFFCEE;
+    }
+    
+    .resolution-options .download-link:hover {
+        background-color: #FEE685;
+        border-color: #FEE685;
+        color: #2D2A2E;
+    }
+    
+    /* 暗色模式下的普通下载链接样式 */
+    .download-link {
+        background: linear-gradient(135deg, #FEE685, #FDF2B8) !important;
+        color: #2D2A2E !important;
+    }
+    
+    .download-link:hover {
+        background: linear-gradient(135deg, #FDF2B8, #FEE685) !important;
+        color: #2D2A2E !important;
+    }
+}
+
+body[data-theme="dark"] .resolution-options .download-link {
+    background-color: rgba(45, 42, 46, 0.95);
+    border-color: rgba(255, 252, 238, 0.2);
+    color: #FFFCEE;
+}
+
+body[data-theme="dark"] .resolution-options .download-link:hover {
+    background-color: #FEE685;
+    border-color: #FEE685;
+    color: #2D2A2E;
+}
+
+/* 手动切换到黑暗模式时的普通下载链接样式 */
+body[data-theme="dark"] .download-link {
+    background: linear-gradient(135deg, #FEE685, #FDF2B8) !important;
+    color: #2D2A2E !important;
+}
+
+body[data-theme="dark"] .download-link:hover {
+    background: linear-gradient(135deg, #FDF2B8, #FEE685) !important;
+    color: #2D2A2E !important;
 }
 
 /* 小屏幕设备 (768px 及以下) - 仅在banner栏无法完整显示时显示汉堡按钮 */
@@ -403,10 +597,12 @@ header {
     .input-group {
         gap: 12px;
         margin-bottom: 20px;
+        flex-wrap: wrap;
     }
      
     #search,
     #bilibiliUrl {
+        flex: 2;
         padding: 14px 20px;
         font-size: 16px;
         border-radius: 12px;
@@ -414,10 +610,12 @@ header {
     }
     
     .download-btn {
-        padding: 14px 24px;
+        padding: 14px 16px;
         font-size: 16px;
         border-radius: 12px;
         min-height: 48px;
+        min-width: 80px;
+        flex-shrink: 0;
     }
     
     .theme-toggle {
@@ -500,14 +698,14 @@ header {
     }
     
     #banner li a:hover {
-        background-color: rgba(79, 70, 229, 0.08);
+        background-color: var(--bg-hover);
         color: var(--primary-color);
         transform: none;
         box-shadow: none;
     }
     
     #banner li a.active {
-        background-color: rgba(79, 70, 229, 0.12);
+        background-color: #FEE685;
         color: var(--primary-color);
         font-weight: 600;
     }
@@ -604,17 +802,18 @@ header {
 
     #banner li a::after {
         display: block;
+        bottom: -4px; /* 调整横线位置，不要紧贴文字 */
     }
 
     #banner li a:hover {
-        background-color: rgba(79, 70, 229, 0.08);
+        background-color: transparent;
         color: var(--primary-color);
         transform: none;
         box-shadow: none;
     }
     
     #banner li a.active {
-        background-color: rgba(79, 70, 229, 0.12);
+        background-color: transparent;
         color: var(--primary-color);
         font-weight: 600;
     }
@@ -624,7 +823,7 @@ header {
     }
     
     #banner li a::after {
-        display: none;
+        display: block;
     }
     
     .hero {
@@ -644,19 +843,20 @@ header {
     
     .input-group {
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;
     }
     
     .download-btn {
         width: 100%;
-        padding: 16px;
+        padding: 20px;
         /* 移动端优化 */
         border-radius: 16px;
-        min-height: 56px;
+        min-height: 64px;
         font-weight: 700;
         letter-spacing: 0.5px;
         -webkit-tap-highlight-color: transparent;
         touch-action: manipulation;
+        font-size: 18px;
     }
     
     .download-btn:active {
@@ -669,8 +869,10 @@ header {
     #search {
         /* 移动端优化 */
         border-radius: 16px;
-        min-height: 56px;
-        padding: 16px 20px;
+        min-height: 64px;
+        padding: 20px 24px;
+        font-size: 18px;
+        flex: 1;
     }
     
     /* 改进移动端焦点样式 */
@@ -729,21 +931,30 @@ header {
         font-size: 16px;
     }
     
+    .input-group {
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
     #search,
     #bilibiliUrl {
-        padding: 16px 20px;
-        font-size: 16px;
+        flex: 1;
+        padding: 18px 22px;
+        font-size: 17px;
         border-radius: 16px;
         /* 移动端优化：增加输入框高度，更适合触摸 */
-        min-height: 56px;
+        min-height: 60px;
+        line-height: 1.4;
+        width: 100%;
     }
     
     .download-btn {
-        padding: 16px;
-        font-size: 16px;
+        padding: 18px;
+        font-size: 17px;
         border-radius: 16px;
         /* 移动端优化：增加按钮高度和圆角，更适合触摸 */
-        min-height: 56px;
+        min-height: 60px;
         font-weight: 700;
         letter-spacing: 0.5px;
         /* 触摸反馈 */
@@ -1027,20 +1238,92 @@ main {
     font-size: 48px;
     font-weight: 800;
     margin-bottom: 24px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light), #a855f7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    /* 使用color属性设置文字颜色，避免背景色块问题 */
+    color: var(--primary-color);
+}
+
+/* 明亮模式下的标题样式 */
+@media (prefers-color-scheme: light) {
+    .hero-content h1 {
+        color: #7B3306;
+    }
+}
+
+/* 手动切换到明亮模式时的标题样式 */
+body[data-theme="light"] .hero-content h1 {
+    color: #7B3306;
+}
+
+/* 明亮模式下的文字颜色适配 */
+@media (prefers-color-scheme: light) {
+    body {
+        color: #7B3306;
+    }
+}
+
+/* 手动切换到明亮模式时的文字颜色适配 */
+body[data-theme="light"] {
+    color: #7B3306;
+}
+
+/* 黑暗模式下的标题样式 */
+@media (prefers-color-scheme: dark) {
+    .hero-content h1 {
+        color: var(--primary-color);
+    }
+}
+
+/* 手动切换到黑暗模式时的标题样式 */
+body[data-theme="dark"] .hero-content h1 {
+    color: var(--primary-color);
+}
+
+/* 默认情况下不显示泛光动画 */
+.hero-content h1 {
+    animation: none;
+}
+
+/* 黑暗模式下显示泛光动画 */
+@media (prefers-color-scheme: dark) {
+    .hero-content h1 {
+        animation: textGlow 4s ease-in-out infinite alternate;
+    }
+}
+
+/* 手动切换到黑暗模式时显示泛光动画 */
+body[data-theme="dark"] .hero-content h1 {
     animation: textGlow 4s ease-in-out infinite alternate;
 }
 
-@keyframes textGlow {
-    0% {
-        filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
+/* 明亮模式下不显示泛光效果 */
+@media (prefers-color-scheme: light) {
+    @keyframes textGlow {
+        0%, 100% {
+            filter: none;
+        }
     }
-    100% {
-        filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.6));
+}
+
+/* 手动切换到明亮模式时不显示泛光效果 */
+body[data-theme="light"] .hero-content h1 {
+    animation: none !important;
+}
+
+/* 黑暗模式下显示泛光效果 */
+@media (prefers-color-scheme: dark) {
+    @keyframes textGlow {
+        0% {
+            filter: drop-shadow(0 0 10px rgba(255, 252, 238, 0.3));
+        }
+        100% {
+            filter: drop-shadow(0 0 20px rgba(255, 252, 238, 0.6));
+        }
     }
+}
+
+/* 手动切换到黑暗模式时显示泛光效果 */
+body[data-theme="dark"] .hero-content h1 {
+    animation: textGlow 4s ease-in-out infinite alternate;
 }
 
 .subtitle {
@@ -1053,36 +1336,38 @@ main {
 }
 
 .download-form {
-    max-width: 700px;
-    margin: 0 auto 32px;
+    max-width: 800px;
+    margin: 0 auto 40px;
 }
 
 .input-group {
     display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 16px;
+    margin-bottom: 32px;
+    align-items: stretch;
 }
 
-#search,
-#bilibiliUrl {
-    flex: 1;
-    padding: 16px 24px;
+#search, #bilibiliUrl {
+    flex: 5;
+    padding: 20px 28px;
     border: 2px solid var(--glass-border);
     border-radius: var(--border-radius);
-    font-size: 16px;
+    font-size: 18px;
     transition: var(--transition);
     box-shadow: var(--shadow-card);
     background: var(--bg-card);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     color: var(--text-color);
+    min-height: 64px;
+    line-height: 1.4;
 }
 
 #search:focus,
 #bilibiliUrl:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), var(--shadow-hover);
+    box-shadow: 0 0 0 4px rgba(255, 252, 238, 0.15), var(--shadow-hover);
     transform: translateY(-2px);
 }
 
@@ -1090,22 +1375,26 @@ main {
 #bilibiliUrl::placeholder {
     color: var(--text-light);
     opacity: 0.7;
+    font-size: 16px;
 }
 
 .download-btn {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: var(--text-white);
+    background: #FEE685;
+    color: #2D2A2E;
     border: none;
     border-radius: var(--border-radius);
-    padding: 16px 32px;
-    font-size: 16px;
-    font-weight: 600;
+    padding: 20px 16px;
+    font-size: 18px;
+    font-weight: 700;
     cursor: pointer;
     transition: var(--transition);
     box-shadow: var(--shadow-card);
     white-space: nowrap;
     position: relative;
     overflow: hidden;
+    min-height: 64px;
+    min-width: 80px;
+    letter-spacing: 0.5px;
 }
 
 .download-btn::before {
@@ -1124,7 +1413,7 @@ main {
 }
 
 .download-btn:hover {
-    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    background: #FDF2B8;
     box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
 }
@@ -1132,8 +1421,8 @@ main {
 /* 确保点击时按钮不会保持上浮状态 */
 .download-btn:active {
     transform: translateY(0);
-    background-color: var(--hover-color);
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    background-color: #FDF2B8;
+    box-shadow: 0 2px 8px rgba(245, 240, 225, 0.2);
     transition: all 0.1s ease;
 }
 
@@ -1207,7 +1496,7 @@ main {
     width: 60px;
     height: 60px;
     border: 4px solid var(--glass-border);
-    border-top: 4px solid var(--primary-color);
+    border-top: 4px solid #FEE685;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 24px;
@@ -1260,9 +1549,6 @@ main {
     max-width: 900px;
     margin: 0 auto 80px;
     animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 @keyframes slideInUp {
@@ -1288,12 +1574,227 @@ main {
     position: relative;
     overflow: hidden;
     max-width: 100%;
-    margin: 0 auto !important;
+    margin: 0 auto;
     width: 100%;
-    left: 0;
-    right: 0;
     display: block;
+}
+
+/* 视频播放区域 */
+.video-preview {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.video-player {
+    width: 100%;
+    aspect-ratio: 9/16;
+    background-color: #000;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    position: relative;
+}
+
+.video-player img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 视频信息区域 */
+.video-details {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* 视频标题样式 */
+.video-title {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-color);
+    margin: 0;
+}
+
+/* 发布时间样式 */
+.publish-time {
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+/* 作者信息卡片样式 */
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--border-radius);
+    margin-bottom: 0;
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-card);
+    transition: var(--transition);
+    animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 视频统计数据样式 */
+.video-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 16px;
+}
+
+/* 移动设备上的.result-container响应式设计 */
+@media (max-width: 768px) {
+    .result-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 20px;
+    }
+    
+    .author-info {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    
+    .author-info-right {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .author-info-right .video-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .author-info-right .stat-item {
+        padding: 6px 8px;
+        gap: 6px;
+    }
+    
+    .author-info-right .stat-value {
+        font-size: 12px;
+    }
+    
+    .author-info-right .stat-label {
+        font-size: 10px;
+    }
+}
+
+.stat-item {
     text-align: center;
+    padding: 16px 12px;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+    box-shadow: var(--shadow-card);
+    animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 分辨率选项样式 */
+.resolution-options {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.resolution-options::-webkit-scrollbar {
+    height: 4px;
+}
+
+.resolution-options::-webkit-scrollbar-thumb {
+    background-color: var(--primary-light);
+    border-radius: 2px;
+}
+
+.resolution-options .download-links {
+    display: flex;
+    gap: 8px;
+}
+
+.resolution-options .download-link {
+    padding: 8px 12px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px; /* 减小圆角从20px到12px */
+    font-size: 14px;
+    color: var(--text-color);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.resolution-options .download-link:hover {
+    background-color: var(--primary-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+/* 下载操作按钮样式 */
+.download-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.copy-link-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.copy-link-btn:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.download-btn {
+    flex: 2;
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 600;
+    color: #2D2A2E;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.download-btn:hover {
+    background-color: var(--primary-light);
+    transform: translateY(-1px);
+}
+
+.download-btn.primary {
+    background-color: #FF4747;
+}
+
+.download-btn.primary:hover {
+    background-color: #FF6B6B;
 }
 
 .result-container::before {
@@ -1317,7 +1818,8 @@ main {
 /* 作者信息卡片样式 */
 .author-info {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 20px;
     padding: 24px;
     background: var(--glass-bg);
@@ -1329,6 +1831,72 @@ main {
     box-shadow: var(--shadow-card);
     transition: var(--transition);
     animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.author-info-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.author-info-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 200px;
+}
+
+.author-info-right .publish-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.author-info-right .publish-time svg {
+    flex-shrink: 0;
+}
+
+.author-info-right .video-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.author-info-right .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius-small);
+    transition: var(--transition);
+    box-shadow: var(--shadow-card);
+    animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+}
+
+.author-info-right .stat-item svg {
+    flex-shrink: 0;
+}
+
+.author-info-right .stat-value {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.author-info-right .stat-label {
+    font-size: 12px;
+    color: var(--text-light);
 }
 
 @keyframes fadeInScale {
@@ -1424,29 +1992,6 @@ main {
     font-weight: 600;
 }
 
-/* 视频统计数据样式 */
-.video-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-}
-
-.stat-item {
-    text-align: center;
-    padding: 20px;
-    background: var(--bg-card);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    box-shadow: var(--shadow-card);
-    animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-}
-
 .stat-item::before {
     content: '';
     position: absolute;
@@ -1532,15 +2077,15 @@ main {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: var(--text-white);
     padding: 12px 24px;
-    border-radius: 8px;
+    border-radius: 6px; /* 减小圆角从8px到6px */
     text-decoration: none;
     font-weight: 600;
     transition: var(--transition);
     box-shadow: var(--shadow-card);
-    /* 设置固定宽度确保所有按钮长度相同 */
+    /* 设置固定宽度确保所有按钮长度相同，使用黄金比例 */
     min-width: 280px;
     width: 100%;
-    max-width: 320px;
+    max-width: 556px; /* 900px / 1.618 ≈ 556px，符合黄金比例 */
     /* 在桌面端保持不换行 */
     white-space: nowrap;
     /* 防止文本溢出 */
@@ -1597,7 +2142,7 @@ main {
 
 .download-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
     width: 0%;
     transition: width 0.3s ease;
     border-radius: 5px;
@@ -1781,6 +2326,8 @@ main {
         display: flex;
         align-items: center;
         justify-content: center;
+        /* 移动端减小圆角 */
+        border-radius: 4px;
     }
     
     /* 移动端特殊动画 */
@@ -1804,8 +2351,21 @@ main {
     }
     
     .hero-content h1 {
-        animation: textGlow 4s ease-in-out infinite alternate !important;
-        animation-duration: 4s !important;
+        animation: none !important;
+    }
+    
+    /* 移动设备黑暗模式下显示泛光动画 */
+    @media (max-width: 768px) and (prefers-color-scheme: dark) {
+        .hero-content h1 {
+            animation: textGlow 4s ease-in-out infinite alternate !important;
+        }
+    }
+    
+    /* 移动设备手动切换到黑暗模式时显示泛光动画 */
+    @media (max-width: 768px) {
+        body[data-theme="dark"] .hero-content h1 {
+            animation: textGlow 4s ease-in-out infinite alternate !important;
+        }
     }
     
     /* 保留关键动画，禁用可能导致闪烁的动画 */
@@ -2065,6 +2625,7 @@ main {
     /* 减少重绘 */
     .download-link,
     .download-btn,
+    .copy-link-btn,
     #search,
     #bilibiliUrl {
         will-change: transform;
@@ -2086,6 +2647,69 @@ main {
     main {
         max-width: none !important; /* 移除最大宽度限制，使用!important覆盖基础样式 */
         padding: 0 16px; /* 减少左右边距 */
+    }
+    
+    /* 视频预览区域响应式调整 */
+    .video-preview {
+        width: 100% !important;
+        margin-bottom: 24px;
+    }
+    
+    /* 视频播放器响应式调整 */
+    .video-player {
+        width: 100%;
+        aspect-ratio: 9/16;
+        max-height: 500px;
+    }
+    
+    /* 下载操作按钮响应式调整 */
+    .download-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .copy-link-btn,
+    .download-btn {
+        flex: none;
+        width: 100%;
+        font-size: 16px;
+        padding: 14px 24px;
+    }
+    
+    /* 分辨率选项响应式调整 */
+    .resolution-options {
+        gap: 6px;
+    }
+    
+    .resolution-options .download-link {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    /* 视频信息区域响应式调整 */
+    .video-details {
+        width: 100%;
+        gap: 16px;
+    }
+    
+    /* 视频标题响应式调整 */
+    .video-title {
+        font-size: 16px;
+    }
+    
+    /* 发布时间响应式调整 */
+    .publish-time {
+        font-size: 13px;
+    }
+    
+    /* 视频统计数据响应式调整 */
+    .video-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-item {
+        padding: 12px 8px;
     }
 }
 
@@ -2148,6 +2772,52 @@ main {
         padding: 8px 12px;
         min-height: 40px;
     }
+    
+    /* 超小屏幕视频预览区域调整 */
+    .video-preview {
+        margin-bottom: 16px;
+    }
+    
+    /* 超小屏幕下载操作按钮调整 */
+    .download-actions {
+        gap: 8px;
+    }
+    
+    .copy-link-btn,
+    .download-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    /* 超小屏幕分辨率选项调整 */
+    .resolution-options {
+        margin-top: 12px;
+    }
+    
+    .resolution-options .download-link {
+        padding: 5px 8px;
+        font-size: 12px;
+    }
+    
+    /* 超小屏幕视频信息区域调整 */
+    .video-details {
+        gap: 12px;
+    }
+    
+    /* 超小屏幕视频标题调整 */
+    .video-title {
+        font-size: 15px;
+    }
+    
+    /* 超小屏幕视频统计数据调整 */
+    .video-stats {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .stat-item {
+        padding: 10px 6px;
+    }
 }
 
 /* 更新提示弹窗样式 */
@@ -2177,7 +2847,7 @@ main {
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--shadow);
     border: 1px solid var(--glass-border);
     animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     /* 隐藏滚动条 */
@@ -2201,7 +2871,20 @@ main {
 .update-modal-header h3 {
     margin: 0;
     color: var(--primary-color);
-    font-size: 20px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* 明亮模式下的更新弹窗标题样式 */
+@media (prefers-color-scheme: light) {
+    .update-modal-header h3 {
+        color: #7B3306 !important;
+    }
+}
+
+/* 手动切换到明亮模式时的更新弹窗标题样式 */
+body[data-theme="light"] .update-modal-header h3 {
+    color: #7B3306 !important;
 }
 
 .update-modal-close {
@@ -2223,6 +2906,8 @@ main {
 .update-modal-close:hover {
     background: var(--glass-bg);
     color: var(--text-color);
+    transform: scale(1.1);
+    box-shadow: var(--shadow-card);
 }
 
 .update-modal-body {
@@ -2231,7 +2916,7 @@ main {
 
 .update-modal-body p {
     margin: 0 0 16px 0;
-    color: var(--text-color);
+    color: var(--update-modal-text-color);
     font-size: 16px;
 }
 
@@ -2241,9 +2926,11 @@ main {
 }
 
 .update-modal-body li {
-    margin-bottom: 8px;
-    color: var(--text-light);
-    line-height: 1.5;
+    margin-bottom: 12px;
+    color: var(--update-modal-list-color);
+    line-height: 1.6;
+    font-size: 14px;
+    transition: var(--transition-fast);
 }
 
 .update-modal-footer {
@@ -2254,7 +2941,7 @@ main {
 
 .update-modal-btn {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-color);
     border: none;
     padding: 12px 24px;
     border-radius: var(--border-radius-small);
@@ -2267,6 +2954,31 @@ main {
 .update-modal-btn:hover {
     background: var(--primary-dark);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+/* 黑暗模式下的更新弹窗按钮样式 */
+@media (prefers-color-scheme: dark) {
+    .update-modal-btn {
+        background: #FEE685 !important;
+        color: #2D2A2E !important;
+    }
+    
+    .update-modal-btn:hover {
+        background: #FDF2B8 !important;
+        color: #2D2A2E !important;
+    }
+}
+
+/* 手动切换到黑暗模式时的更新弹窗按钮样式 */
+body[data-theme="dark"] .update-modal-btn {
+    background: #FEE685 !important;
+    color: #2D2A2E !important;
+}
+
+body[data-theme="dark"] .update-modal-btn:hover {
+    background: #FDF2B8 !important;
+    color: #2D2A2E !important;
 }
 
 /* 响应式适配 */
@@ -2362,13 +3074,25 @@ main {
 /* 标题样式 */
 .changelog-title {
     font-weight: 600;
-    color: var(--primary-color) !important;
+    color: var(--update-modal-title-color) !important;
     font-size: 15px !important;
     margin: 20px 0 12px 0 !important;
     padding: 8px 12px;
-    background: var(--glass-bg);
+    background: var(--update-modal-text-bg-color);
     border-radius: var(--border-radius-small);
     border-left: 3px solid var(--primary-color);
+}
+
+/* 明亮模式下的标题样式 */
+@media (prefers-color-scheme: light) {
+    .changelog-title {
+        color: #7B3306 !important;
+    }
+}
+
+/* 手动切换到明亮模式时的标题样式 */
+body[data-theme="light"] .changelog-title {
+    color: #7B3306 !important;
 }
 
 /* 列表项样式 */
@@ -2396,7 +3120,7 @@ main {
 
 /* 新增功能样式 */
 .changelog-new {
-    color: var(--text-color) !important;
+    color: var(--update-modal-new-color) !important;
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), transparent);
     padding: 10px 12px;
     border-radius: var(--border-radius-small);
@@ -2409,7 +3133,7 @@ main {
 
 /* 优化改进样式 */
 .changelog-improve {
-    color: var(--text-color) !important;
+    color: var(--update-modal-improve-color) !important;
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
     padding: 10px 12px;
     border-radius: var(--border-radius-small);
@@ -2422,7 +3146,7 @@ main {
 
 /* 修复问题样式 */
 .changelog-fix {
-    color: var(--text-color) !important;
+    color: var(--update-modal-fix-color) !important;
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), transparent);
     padding: 10px 12px;
     border-radius: var(--border-radius-small);
@@ -2435,7 +3159,7 @@ main {
 
 /* 删除功能样式 */
 .changelog-remove {
-    color: var(--text-light) !important;
+    color: var(--update-modal-remove-color) !important;
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), transparent);
     padding: 10px 12px;
     border-radius: var(--border-radius-small);
@@ -2450,8 +3174,9 @@ main {
 /* 普通文本样式 */
 .changelog-text {
     padding: 8px 12px;
-    background: var(--glass-bg);
+    background: var(--update-modal-text-bg-color);
     border-radius: var(--border-radius-small);
+    color: var(--update-modal-text-color);
 }
 
 /* 悬停效果 */
@@ -2460,8 +3185,8 @@ main {
 .changelog-fix:hover,
 .changelog-remove:hover,
 .changelog-text:hover {
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
 }
 
 /* 移动端适配 */
@@ -2524,6 +3249,70 @@ main {
     background: var(--glass-bg);
     color: var(--primary-dark);
     transform: translateY(-1px);
+}
+
+/* 明亮模式下的版本号样式 */
+@media (prefers-color-scheme: light) {
+    .version-info {
+        color: #4A464A;
+    }
+    
+    .version-link {
+        color: #2D2A2E;
+        font-weight: 600;
+    }
+    
+    .version-link:hover {
+        background: rgba(45, 42, 46, 0.1);
+        color: #2D2A2E;
+    }
+}
+
+/* 手动切换到明亮模式时的版本号样式 */
+body[data-theme="light"] .version-info {
+    color: #4A464A;
+}
+
+body[data-theme="light"] .version-link {
+    color: #2D2A2E;
+    font-weight: 600;
+}
+
+body[data-theme="light"] .version-link:hover {
+    background: rgba(45, 42, 46, 0.1);
+    color: #2D2A2E;
+}
+
+/* 黑暗模式下的版本号样式 */
+@media (prefers-color-scheme: dark) {
+    .version-info {
+        color: var(--text-light);
+    }
+    
+    .version-link {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    .version-link:hover {
+        background: var(--glass-bg);
+        color: var(--primary-dark);
+    }
+}
+
+/* 手动切换到黑暗模式时的版本号样式 */
+body[data-theme="dark"] .version-info {
+    color: var(--text-light);
+}
+
+body[data-theme="dark"] .version-link {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+body[data-theme="dark"] .version-link:hover {
+    background: var(--glass-bg);
+    color: var(--primary-dark);
 }
 
 /* 移动端适配 */
