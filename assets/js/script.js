@@ -447,6 +447,17 @@ function showAutoModeHint(message) {
             }
         }
         
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
         .hint-close:hover {
             background: var(--glass-border);
         }
@@ -456,9 +467,69 @@ function showAutoModeHint(message) {
     // 添加到页面
     document.body.appendChild(hintElement);
     
+    // 触摸滑动关闭功能（手机端）
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    
+    hintElement.addEventListener('touchstart', function(e) {
+        e.stopPropagation(); // 阻止事件冒泡
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        hintElement.style.transition = 'none'; // 禁用过渡效果，实现流畅跟随
+    }, { passive: false });
+    
+    hintElement.addEventListener('touchmove', function(e) {
+        if (!touchStartY) return;
+        
+        e.stopPropagation(); // 阻止事件冒泡
+        e.preventDefault(); // 阻止默认滚动行为
+        
+        const touchY = e.touches[0].clientY;
+        const deltaY = touchStartY - touchY; // 上滑为正值
+        
+        if (deltaY > 0) { // 只处理上滑
+            const translateY = Math.min(deltaY, 100); // 限制最大滑动距离
+            hintElement.style.transform = `translateY(-${translateY}px)`;
+            hintElement.style.opacity = Math.max(0.3, 1 - translateY / 100); // 随滑动淡出
+        }
+    }, { passive: false });
+    
+    hintElement.addEventListener('touchend', function(e) {
+        if (!touchStartY) return;
+        
+        e.stopPropagation(); // 阻止事件冒泡
+        
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaY = touchStartY - touchEndY;
+        const touchDuration = Date.now() - touchStartTime;
+        
+        // 判断是否满足上滑关闭条件：滑动距离大于30px且速度较快
+        if (deltaY > 30 && (deltaY / touchDuration) > 0.1) {
+            // 上滑关闭
+            hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            hintElement.style.transform = 'translateY(-100px)';
+            hintElement.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (hintElement.parentNode) {
+                    hintElement.parentNode.removeChild(hintElement);
+                }
+            }, 300);
+        } else {
+            // 不满足条件，恢复原位置
+            hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+            hintElement.style.transform = 'translateY(0)';
+            hintElement.style.opacity = '1';
+        }
+        
+        // 重置触摸状态
+        touchStartY = 0;
+        touchStartTime = 0;
+    }, { passive: false });
+    
     // 关闭按钮事件
     hintClose.addEventListener('click', function() {
-        hintElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+        hintElement.style.animation = 'slideOutRight 0.3s ease-out forwards';
         setTimeout(() => {
             if (hintElement.parentNode) {
                 hintElement.parentNode.removeChild(hintElement);
@@ -469,7 +540,7 @@ function showAutoModeHint(message) {
     // 3秒后自动消失
     setTimeout(() => {
         if (hintElement.parentNode) {
-            hintElement.style.animation = 'slideInRight 0.3s ease-out reverse';
+            hintElement.style.animation = 'slideOutRight 0.3s ease-out forwards';
             setTimeout(() => {
                 if (hintElement.parentNode) {
                     hintElement.parentNode.removeChild(hintElement);
