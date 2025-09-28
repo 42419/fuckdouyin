@@ -470,62 +470,100 @@ function showAutoModeHint(message) {
     // 触摸滑动关闭功能（手机端）
     let touchStartY = 0;
     let touchStartTime = 0;
+    let isTouchEnabled = true;
     
-    hintElement.addEventListener('touchstart', function(e) {
-        e.stopPropagation(); // 阻止事件冒泡
-        touchStartY = e.touches[0].clientY;
-        touchStartTime = Date.now();
-        hintElement.style.transition = 'none'; // 禁用过渡效果，实现流畅跟随
-    }, { passive: false });
+    // 检查是否支持触摸事件
+    const isTouchSupported = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     
-    hintElement.addEventListener('touchmove', function(e) {
-        if (!touchStartY) return;
-        
-        e.stopPropagation(); // 阻止事件冒泡
-        e.preventDefault(); // 阻止默认滚动行为
-        
-        const touchY = e.touches[0].clientY;
-        const deltaY = touchStartY - touchY; // 上滑为正值
-        
-        if (deltaY > 0) { // 只处理上滑
-            const translateY = Math.min(deltaY, 100); // 限制最大滑动距离
-            hintElement.style.transform = `translateY(-${translateY}px)`;
-            hintElement.style.opacity = Math.max(0.3, 1 - translateY / 100); // 随滑动淡出
-        }
-    }, { passive: false });
-    
-    hintElement.addEventListener('touchend', function(e) {
-        if (!touchStartY) return;
-        
-        e.stopPropagation(); // 阻止事件冒泡
-        
-        const touchEndY = e.changedTouches[0].clientY;
-        const deltaY = touchStartY - touchEndY;
-        const touchDuration = Date.now() - touchStartTime;
-        
-        // 判断是否满足上滑关闭条件：滑动距离大于30px且速度较快
-        if (deltaY > 30 && (deltaY / touchDuration) > 0.1) {
-            // 上滑关闭
-            hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
-            hintElement.style.transform = 'translateY(-100px)';
-            hintElement.style.opacity = '0';
+    if (isTouchSupported) {
+        hintElement.addEventListener('touchstart', function(e) {
+            if (!isTouchEnabled) return;
             
-            setTimeout(() => {
-                if (hintElement.parentNode) {
-                    hintElement.parentNode.removeChild(hintElement);
-                }
-            }, 300);
-        } else {
-            // 不满足条件，恢复原位置
+            e.stopPropagation(); // 阻止事件冒泡
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            hintElement.style.transition = 'none'; // 禁用过渡效果，实现流畅跟随
+            
+            // 添加触摸反馈样式
+            hintElement.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+        }, { passive: false });
+        
+        hintElement.addEventListener('touchmove', function(e) {
+            if (!isTouchEnabled || !touchStartY) return;
+            
+            e.stopPropagation(); // 阻止事件冒泡
+            
+            // 只有在实际滑动时才阻止默认行为
+            if (Math.abs(e.touches[0].clientY - touchStartY) > 5) {
+                e.preventDefault(); // 阻止默认滚动行为
+            }
+            
+            const touchY = e.touches[0].clientY;
+            const deltaY = touchStartY - touchY; // 上滑为正值
+            
+            if (deltaY > 0) { // 只处理上滑
+                const translateY = Math.min(deltaY, 100); // 限制最大滑动距离
+                hintElement.style.transform = `translateY(-${translateY}px)`;
+                hintElement.style.opacity = Math.max(0.3, 1 - translateY / 100); // 随滑动淡出
+            }
+        }, { passive: false });
+        
+        hintElement.addEventListener('touchend', function(e) {
+            if (!isTouchEnabled || !touchStartY) return;
+            
+            e.stopPropagation(); // 阻止事件冒泡
+            
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaY = touchStartY - touchEndY;
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // 判断是否满足上滑关闭条件：滑动距离大于30px且速度较快
+            if (deltaY > 30 && (deltaY / touchDuration) > 0.1) {
+                // 上滑关闭
+                hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+                hintElement.style.transform = 'translateY(-100px)';
+                hintElement.style.opacity = '0';
+                
+                // 禁用后续触摸事件
+                isTouchEnabled = false;
+                
+                setTimeout(() => {
+                    if (hintElement.parentNode) {
+                        hintElement.parentNode.removeChild(hintElement);
+                    }
+                }, 300);
+            } else {
+                // 不满足条件，恢复原位置
+                hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+                hintElement.style.transform = 'translateY(0)';
+                hintElement.style.opacity = '1';
+                
+                // 恢复阴影样式
+                hintElement.style.boxShadow = 'var(--shadow)';
+            }
+            
+            // 重置触摸状态
+            touchStartY = 0;
+            touchStartTime = 0;
+        }, { passive: false });
+        
+        // 添加触摸取消事件
+        hintElement.addEventListener('touchcancel', function(e) {
+            if (!isTouchEnabled || !touchStartY) return;
+            
+            e.stopPropagation(); // 阻止事件冒泡
+            
+            // 触摸取消时恢复原位置
             hintElement.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
             hintElement.style.transform = 'translateY(0)';
             hintElement.style.opacity = '1';
-        }
-        
-        // 重置触摸状态
-        touchStartY = 0;
-        touchStartTime = 0;
-    }, { passive: false });
+            hintElement.style.boxShadow = 'var(--shadow)';
+            
+            // 重置触摸状态
+            touchStartY = 0;
+            touchStartTime = 0;
+        }, { passive: false });
+    }
     
     // 关闭按钮事件
     hintClose.addEventListener('click', function() {
