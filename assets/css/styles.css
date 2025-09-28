@@ -1221,7 +1221,7 @@ main {
     box-shadow: var(--shadow);
     border: 1px solid var(--glass-border);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .hero-content::before {
@@ -1283,47 +1283,62 @@ body[data-theme="dark"] .hero-content h1 {
     animation: none;
 }
 
-/* 黑暗模式下显示泛光动画 */
-@media (prefers-color-scheme: dark) {
-    .hero-content h1 {
-        animation: textGlow 4s ease-in-out infinite alternate;
-    }
-}
-
-/* 手动切换到黑暗模式时显示泛光动画 */
-body[data-theme="dark"] .hero-content h1 {
-    animation: textGlow 4s ease-in-out infinite alternate;
-}
-
-/* 明亮模式下不显示泛光效果 */
-@media (prefers-color-scheme: light) {
-    @keyframes textGlow {
-        0%, 100% {
-            filter: none;
-        }
-    }
-}
-
 /* 手动切换到明亮模式时不显示泛光效果 */
 body[data-theme="light"] .hero-content h1 {
     animation: none !important;
 }
 
-/* 黑暗模式下显示泛光效果 */
-@media (prefers-color-scheme: dark) {
-    @keyframes textGlow {
-        0% {
-            filter: drop-shadow(0 0 10px rgba(255, 252, 238, 0.3));
-        }
-        100% {
-            filter: drop-shadow(0 0 20px rgba(255, 252, 238, 0.6));
-        }
+/* 背景泛光动画定义 */
+@keyframes backgroundGlow {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 252, 238, 0.2),
+                    0 0 20px rgba(255, 252, 238, 0.1);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(255, 252, 238, 0.4),
+                    0 0 40px rgba(255, 252, 238, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 10px rgba(255, 252, 238, 0.2),
+                    0 0 20px rgba(255, 252, 238, 0.1);
     }
 }
 
-/* 手动切换到黑暗模式时显示泛光效果 */
+/* 黑暗模式下显示背景泛光效果 */
+@media (prefers-color-scheme: dark) {
+    .hero-content {
+        animation: backgroundGlow 4s ease-in-out infinite alternate;
+        position: relative;
+    }
+    .hero-content h1 {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+/* 手动切换到黑暗模式时显示背景泛光效果 */
+body[data-theme="dark"] .hero-content {
+    animation: backgroundGlow 4s ease-in-out infinite alternate;
+    position: relative;
+}
 body[data-theme="dark"] .hero-content h1 {
-    animation: textGlow 4s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 1;
+}
+
+/* 移动设备上的动画优化 */
+@media (max-width: 768px) {
+    /* 系统偏好黑暗模式下的移动设备优化 */
+    @media (prefers-color-scheme: dark) {
+        .hero-content {
+            animation: backgroundGlow 6s ease-in-out infinite alternate !important;
+        }
+    }
+    
+    /* 手动切换黑暗模式下的移动设备优化 */
+    body[data-theme="dark"] .hero-content {
+        animation: backgroundGlow 6s ease-in-out infinite alternate !important;
+    }
 }
 
 .subtitle {
@@ -1379,8 +1394,8 @@ body[data-theme="dark"] .hero-content h1 {
 }
 
 .download-btn {
-    background: #FEE685;
-    color: #2D2A2E;
+    background: #FEE685 !important;
+    color: #2D2A2E !important;
     border: none;
     border-radius: var(--border-radius);
     padding: 20px 16px;
@@ -1413,7 +1428,7 @@ body[data-theme="dark"] .hero-content h1 {
 }
 
 .download-btn:hover {
-    background: #FDF2B8;
+    background: #FDF2B8 !important;
     box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
 }
@@ -3575,6 +3590,18 @@ body[data-theme="dark"] .version-link {
 body[data-theme="dark"] .version-link:hover {
     background: var(--glass-bg);
     color: var(--primary-dark);
+}
+
+/* 黑暗模式下的提示信息文字颜色 */
+@media (prefers-color-scheme: dark) {
+    .tip-item {
+        color: var(--text-color);
+    }
+}
+
+/* 手动切换到黑暗模式时的提示信息文字颜色 */
+body[data-theme="dark"] .tip-item {
+    color: var(--text-color);
 }
 
 /* 移动端适配 */

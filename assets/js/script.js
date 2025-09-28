@@ -414,6 +414,7 @@ function showAutoModeHint(message) {
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        color: var(--text-color);
     `;
     
     const hintClose = hintElement.querySelector('.hint-close');
