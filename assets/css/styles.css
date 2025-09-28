@@ -93,13 +93,11 @@ header {
 .logo {
     font-size: 24px;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin: 0;
     animation: logoGlow 3s ease-in-out infinite alternate;
     transition: var(--transition);
+    /* 明亮模式下使用深色文字 */
+    color: #7B3306;
 }
 
 .logo:hover {
@@ -1271,11 +1269,20 @@ body[data-theme="light"] {
     .hero-content h1 {
         color: var(--primary-color);
     }
+    
+    .logo {
+        color: #FFFCEE;
+    }
 }
 
 /* 手动切换到黑暗模式时的标题样式 */
 body[data-theme="dark"] .hero-content h1 {
     color: var(--primary-color);
+}
+
+/* 手动切换到黑暗模式时的logo样式 */
+body[data-theme="dark"] .logo {
+    color: #FFFCEE;
 }
 
 /* 默认情况下不显示泛光动画 */
