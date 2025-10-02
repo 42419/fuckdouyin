@@ -1,5 +1,6 @@
 // Cloudflare Functions - 超简化重定向处理
-export async function onRequestGet(request, env, context) {
+export async function onRequestGet(context) {
+  const { request, env } = context;
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json'
@@ -9,11 +10,19 @@ export async function onRequestGet(request, env, context) {
     // 更安全地解析URL参数
     let urlParams;
     try {
+      // 检查request.url是否存在且为有效字符串
+      if (!request.url || typeof request.url !== 'string') {
+        return new Response(JSON.stringify({ 
+          error: '请求URL无效: URL不存在或不是字符串',
+          success: false 
+        }), { status: 400, headers: corsHeaders });
+      }
+      
       const urlObj = new URL(request.url);
       urlParams = urlObj.searchParams;
     } catch (urlError) {
       return new Response(JSON.stringify({ 
-        error: 'URL解析失败: ' + urlError.message,
+        error: 'URL解析失败: ' + (urlError.message || String(urlError)),
         success: false 
       }), { status: 400, headers: corsHeaders });
     }
@@ -21,7 +30,10 @@ export async function onRequestGet(request, env, context) {
     const inputUrl = urlParams.get('url');
 
     if (!inputUrl) {
-      return new Response(JSON.stringify({ error: '缺少URL参数' }), { status: 400, headers: corsHeaders });
+      return new Response(JSON.stringify({ 
+        error: '缺少URL参数',
+        success: false 
+      }), { status: 400, headers: corsHeaders });
     }
 
     // 验证inputUrl是否为有效的URL格式
