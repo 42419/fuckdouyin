@@ -1178,8 +1178,67 @@ function extractAwemeId(input) {
 function handleShortLinkRedirect(shortLink, callback) {
     console.log('开始智能重定向处理:', shortLink);
     
-    // 方法1: 优先使用Cloudflare Workers
-    tryCloudflareWorkers(shortLink, callback);
+    // 检查是否在本地环境运行
+    const isLocalEnvironment = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' || 
+                              window.location.hostname === '0.0.0.0';
+    
+    if (isLocalEnvironment) {
+        // 本地环境优先使用Express.js服务器
+        console.log('检测到本地环境，使用Express.js服务器处理重定向');
+        tryLocalServerRedirect(shortLink, callback);
+    } else {
+        // 非本地环境使用Cloudflare Workers
+        tryCloudflareWorkers(shortLink, callback);
+    }
+}
+
+// 尝试使用本地Express.js服务器处理重定向
+function tryLocalServerRedirect(shortLink, callback) {
+    console.log('尝试使用本地Express.js服务器处理重定向:', shortLink);
+    
+    const localApiUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
+    
+    fetch(localApiUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => {
+        console.log('本地服务器响应状态:', response.status);
+        if (!response.ok) {
+            throw new Error(`本地服务器请求失败: ${response.status} - ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('本地服务器响应数据:', data);
+        
+        if (data.url) {
+            console.log('本地服务器成功获取重定向URL:', data.url);
+            callback(data.url);
+        } else {
+            console.log('本地服务器无法处理，尝试智能重定向处理器');
+            // 备用方案：使用智能重定向处理器
+            if (typeof window.smartRedirectHandler !== 'undefined') {
+                window.smartRedirectHandler.handleRedirect(shortLink, callback);
+            } else {
+                showSimpleGuidance(shortLink, callback);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('本地服务器请求出错:', error.message);
+        console.log('本地服务器不可用，使用智能重定向处理器');
+        // 本地服务器失败，使用智能重定向处理器
+        if (typeof window.smartRedirectHandler !== 'undefined') {
+            window.smartRedirectHandler.handleRedirect(shortLink, callback);
+        } else {
+            showSimpleGuidance(shortLink, callback);
+        }
+    });
 }
 
 // 尝试Cloudflare Workers重定向

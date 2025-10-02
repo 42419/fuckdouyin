@@ -6,11 +6,32 @@ export async function onRequestGet(request, env, context) {
   };
 
   try {
-    const urlParams = new URL(request.url).searchParams;
+    // 更安全地解析URL参数
+    let urlParams;
+    try {
+      const urlObj = new URL(request.url);
+      urlParams = urlObj.searchParams;
+    } catch (urlError) {
+      return new Response(JSON.stringify({ 
+        error: 'URL解析失败: ' + urlError.message,
+        success: false 
+      }), { status: 400, headers: corsHeaders });
+    }
+
     const inputUrl = urlParams.get('url');
 
     if (!inputUrl) {
       return new Response(JSON.stringify({ error: '缺少URL参数' }), { status: 400, headers: corsHeaders });
+    }
+
+    // 验证inputUrl是否为有效的URL格式
+    try {
+      new URL(inputUrl);
+    } catch (urlError) {
+      return new Response(JSON.stringify({ 
+        error: '无效的URL格式: ' + inputUrl,
+        success: false 
+      }), { status: 400, headers: corsHeaders });
     }
 
     // 对于抖音短链接，提供用户友好的指导
@@ -50,14 +71,25 @@ export async function onRequestGet(request, env, context) {
 
       const location = response.headers.get('location');
       if (location) {
+        // 确保location是完整的URL
+        let finalUrl = location;
+        try {
+          // 如果location是相对路径，需要结合原始URL
+          finalUrl = new URL(location, inputUrl).toString();
+        } catch (e) {
+          // 如果转换失败，保持原始location
+          console.log('无法解析相对路径URL:', location);
+        }
+        
         return new Response(JSON.stringify({ 
-          url: location, 
+          url: finalUrl, 
           success: true, 
           method: 'location_header' 
         }), { headers: corsHeaders });
       }
     } catch (error) {
       // 忽略错误，继续执行
+      console.log('获取重定向失败:', error.message);
     }
 
     return new Response(JSON.stringify({ 
@@ -68,6 +100,7 @@ export async function onRequestGet(request, env, context) {
     }), { headers: corsHeaders });
 
   } catch (error) {
+    console.error('重定向处理错误:', error);
     return new Response(JSON.stringify({ 
       error: '请求处理失败: ' + (error && error.message ? error.message : String(error)), 
       success: false 

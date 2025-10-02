@@ -22,22 +22,16 @@ app.get('/api/redirect', async (req, res) => {
     
     console.log(`处理重定向请求: ${url}`);
     
-    // 发送请求但不跟随重定向
+    // 发送请求并跟随重定向直到获取最终URL
     const response = await axios.get(url, {
-      maxRedirects: 0, // 不跟随重定向
-      validateStatus: status => status >= 200 && status < 400 || status === 301 || status === 302 || status === 307 || status === 308
+      maxRedirects: 10, // 允许最多10次重定向
+      validateStatus: status => status >= 200 && status < 400
     });
     
-    // 检查是否有重定向响应头
-    if (response.status >= 300 && response.status < 400) {
-      const redirectUrl = response.headers.location;
-      console.log(`获取到重定向URL: ${redirectUrl}`);
-      return res.json({ url: redirectUrl });
-    } else {
-      // 如果没有重定向，直接返回原始URL
-      console.log('未找到重定向，返回原始URL');
-      return res.json({ url });
-    }
+    // 获取最终URL
+    const finalUrl = response.request.res.responseUrl || response.request.path || url;
+    console.log(`获取到最终URL: ${finalUrl}`);
+    return res.json({ url: finalUrl, success: true, method: 'follow_redirect' });
   } catch (error) {
     console.error('重定向处理错误:', error.message);
     res.status(500).json({ error: '代理请求失败: ' + error.message });
