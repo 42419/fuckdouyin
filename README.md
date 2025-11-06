@@ -1,280 +1,188 @@
 # 抖音视频下载工具
 
-一个简单易用的抖音视频下载工具，支持通过视频ID、分享链接或短链接获取抖音视频信息并提供下载选项。本项目提供多种部署方式，支持本地开发调试和云端快速部署。
+一个基于 Cloudflare 全家桶的抖音视频解析下载工具。通过第三方 API 获取抖音视频直链，使用 Cloudflare Workers 代理下载。本地通过 Express 服务器提供开发测试环境。
 
-## 功能特点
+## 🏗️ 项目架构
 
-- 支持多种输入格式：视频ID、完整链接、短链接
-- 自动解析视频信息（标题、作者、时长、统计数据等）
-- 提供多种画质和分辨率的下载选项
-- 多重后端支持：Node.js Express、Cloudflare Functions、Cloudflare Workers
-- 智能重定向处理：解决抖音短链接跨域问题
-- 优雅的错误处理和用户提示
-- **智能主题切换功能**：支持自动跟随系统主题变化
-- **跨设备兼容**：桌面端支持左键/右键操作，移动端支持点击/长按操作
-- **统一体验**：所有设备默认启用自动模式，确保一致的用户体验
+本项目采用分层架构设计，充分利用 Cloudflare 的无服务器能力：
 
-## 环境要求
+### 1. **Cloudflare Pages** - 前端托管
+- 托管静态资源：HTML、CSS、JavaScript
+- 提供用户界面和交互逻辑
 
-- 本地开发：需要安装 [Node.js](https://nodejs.org/zh-cn/)（推荐v18或更高版本）
-- 部署平台：免费的Cloudflare账户或支持Netlify Functions的平台
-- 现代浏览器（Chrome、Firefox、Edge等）
+### 2. **Cloudflare Functions** - 短链重定向处理
+- 部署在 Pages Functions 中，与前端同域
+- 处理抖音短链接的重定向，避免 CORS 问题
+- 路径：`/api/redirect?url=<短链接>`
 
-## 项目结构
+### 3. **Cloudflare Workers** - 代理下载服务
+- 独立部署的 Workers 服务
+- 提供视频下载代理和短链展开功能
+- 域名：`redirect-expander.liyunfei.eu.org`
+- 接口：
+  - `/expand?url=<短链接>` - 展开短链接
+  - `/download?url=<视频直链>` - 代理下载视频
 
-```
-├── .gitignore              # Git忽略文件
-├── README.md               # 项目文档
-├── _redirects              # Netlify重定向规则
-├── assets/                 # 静态资源
-│   ├── css/styles.css      # 样式文件
-│   └── js/                 # JavaScript脚本
-│       ├── script.js       # 主脚本
-│       ├── frontend-redirect.js  # 前端重定向处理
-│       └── smart-redirect.js     # 智能重定向处理
-├── functions/              # Cloudflare/Netlify Functions
-│   └── api/                # API端点
-│       ├── download.js     # 视频下载API
-│       ├── redirect.js     # 重定向处理API
-│       ├── test.js         # 测试API
-│       └── third-party-redirect.js  # 第三方重定向API
-├── index.html              # 主页面
-├── package.json            # Node.js项目配置
-├── package-lock.json       # 依赖锁定文件
-├── server.js               # 本地Express服务器
-├── test-browser.html       # 浏览器测试页面
-├── test-redirect.html      # 重定向测试页面
-├── theme-test.html         # 主题测试页面
-├── version.json            # 版本信息
-├── workers/                # Cloudflare Workers
-│   └── redirect-expander/
-│       ├── wrangler.toml   # Worker配置
-│       └── src/index.ts    # Worker代码
-└── wrangler.toml           # 根级Cloudflare配置
-```
+### 4. **本地开发环境**
+- Express 服务器模拟生产环境 API
+- 便于开发调试和功能测试
 
-## 使用方法
+## ✨ 功能特点
 
-### 在浏览器中使用工具
+- 🎯 **多格式输入支持**：视频ID、完整链接、短链接
+- 📊 **智能视频解析**：自动获取标题、作者、时长、统计数据
+- 🎬 **多分辨率下载**：提供多种画质和分辨率选项
+- 🔄 **智能重定向**：自动处理抖音短链接跨域问题
+- 🎨 **主题切换**：支持明暗模式，自动跟随系统主题
+- 📱 **跨设备兼容**：桌面端和移动端操作优化
+- 🛡️ **优雅错误处理**：完善的错误提示和降级方案
 
-打开浏览器，访问应用地址即可使用工具。
+## 🚀 快速开始
 
-### 下载视频步骤
+### 环境要求
+- Node.js 18+（本地开发）
+- Cloudflare 账户（生产部署）
+- 现代浏览器
 
-1. 在输入框中粘贴抖音视频链接、视频ID或短链接
-2. 点击"下载"按钮
-3. 等待解析完成后，选择合适的画质和分辨率进行下载
-
-### 主题切换功能使用指南
-
-#### 自动模式（默认）
-- **所有设备**默认启用自动模式
-- 页面会自动跟随系统主题变化（明/暗模式）
-- 重新进入页面时会自动重置为自动模式
-
-#### 桌面设备操作
-- **左键点击**主题按钮：切换明暗模式（退出自动模式）
-- **右键点击**主题按钮：切换自动/手动模式
-
-#### 移动设备操作
-- **点击**主题按钮：切换明暗模式（退出自动模式）
-- **长按**主题按钮（500毫秒）：切换自动/手动模式
-
-#### 操作提示
-- 页面加载时会显示当前模式状态
-- 操作时会显示相应的提示信息
-- 提示信息3秒后自动消失，也可手动关闭
-
-## 本地开发
-
-### 环境设置
-
-1. 安装Node.js（版本18+推荐）
-2. 克隆项目代码到本地
-3. 进入项目目录
-
-### 安装依赖和启动
+### 本地开发
 
 ```bash
+# 克隆项目
+git clone <repository-url>
+cd fkdouyin
+
 # 安装依赖
 npm install
 
-# 启动本地服务器（生产模式）
-npm start
-
-# 启动开发模式（支持热重载）
+# 启动开发服务器
 npm run dev
 ```
 
-服务器将在 http://localhost:3000 启动。
+访问 `http://localhost:3000` 开始开发调试。
 
-### 测试页面
+## 📦 部署指南
 
-项目包含多个测试页面，方便开发调试：
+### 推荐部署方案：Cloudflare Pages + Functions + Workers
 
-- http://localhost:3000/test-browser.html - 浏览器兼容性测试
-- http://localhost:3000/test-redirect.html - 重定向功能测试
-- http://localhost:3000/theme-test.html - 主题切换测试
-
-## 部署教程
-
-### 方式一：部署到Node.js服务器
-
-适合需要完全控制后端的场景。
-
-1. **服务器准备**
-   - 确保服务器安装Node.js 18+
-   - 上传项目代码到服务器
-
-2. **安装和启动**
-   ```bash
-   cd /path/to/project
-   npm install --production
-   npm start
-   ```
-
-3. **配置服务**
-   - 使用PM2或systemd管理进程
-   - 配置反向代理（如nginx）
-   - 设置SSL证书
-
-4. **访问**
-   - 默认端口3000，可通过代理暴露80/443端口
-   - 示例：https://your-domain.com
-
-### 方式二：部署到Cloudflare Pages + Functions
-
-推荐的免费云部署方式，支持CDN加速。
-
-#### 前提条件
-- 免费Cloudflare账户
-- 代码托管在GitHub、GitLab或Bitbucket
-
-#### 部署步骤
-
-1. **登录Cloudflare Dashboard**
-   - 访问 https://dash.cloudflare.com/
-   - 登录您的账户
-
-2. **创建Pages项目**
-   - 选择左侧"Pages"选项
-   - 点击"Create a project" → "Connect to Git"
-   - 授权访问代码仓库
-   - 选择项目仓库
-
-3. **配置构建设置**
-   - 分支：选择main或master
-   - Build settings：
-     - Framework preset: None
-     - Build command: 留空
-     - Build output directory: 留空
-   - Cloudflare自动检测functions目录
-
-4. **部署和访问**
-   - 点击"Save and Deploy"
-   - 等待部署完成
-   - 获得 xxx.pages.dev 域名访问
-   - 可在Pages设置中绑定自定义域名
-
-### 方式三：使用Cloudflare Workers
-
-最强大的无服务器解决方案，支持多接口。
-
-#### 安装Wrangler CLI
-
+#### 1. 部署 Cloudflare Pages（前端）
 ```bash
+# 连接 GitHub 仓库到 Cloudflare Pages
+# 在 Dashboard 中创建 Pages 项目
+# 自动检测 functions 目录并部署
+```
+
+#### 2. 部署 Cloudflare Workers（代理服务）
+```bash
+# 安装 Wrangler CLI
 npm install -g wrangler
-```
-
-#### 配置认证
-
-```bash
 wrangler auth login
-```
 
-#### 部署Workers
-
-```bash
-# 进入Workers目录
+# 部署 Workers
 cd workers/redirect-expander
-
-# 部署Worker
 wrangler deploy
 ```
 
-#### 部署后配置
+#### 3. 配置域名
+- Pages 自动分配 `*.pages.dev` 域名
+- Workers 绑定自定义域名 `redirect-expander.liyunfei.eu.org`
 
-访问Cloudflare Dashboard → Workers → Your Worker：
+### 其他部署方式
 
-1. 配置路由（Routes）
-2. 设置域名绑定
-3. 配置环境变量（如需要）
+#### Node.js 服务器
+```bash
+npm install --production
+npm start
+```
 
-#### 测试Workers API
+#### Netlify
+- 连接 GitHub 仓库
+- 设置 Functions 目录为 `functions`
+- 自动部署
 
-部署完成后，可通过以下接口测试：
+## 📖 使用方法
 
-- `https://your-worker.your-account.workers.dev/expand?url=短链接`
-- `https://your-worker.your-account.workers.dev/download?url=视频链接`
+### 下载抖音视频
 
-### 方式四：部署到Netlify
+1. **输入链接**：在输入框粘贴抖音视频链接
+2. **解析视频**：点击"解析"按钮获取视频信息
+3. **选择画质**：从提供的分辨率选项中选择
+4. **下载视频**：点击下载链接开始下载
 
-如果使用Netlify托管，支持自动部署。
+### 支持的输入格式
 
-1. **连接仓库**
-   - 在Netlify Dashboard创建新站点
-   - 连接GitHub/GitLab仓库
-   - 选择分支
+- 视频ID：`730243852892`
+- 完整链接：`https://www.douyin.com/video/730243852892`
+- 短链接：`https://v.douyin.com/abc123/`
 
-2. **构建设置**
-   - Build command: 留空
-   - Publish directory: .
-   - Functions directory: functions
+### 主题切换
 
-3. **部署**
-   - 可启用自动部署
-   - 获得自动分配域名或绑定自定义域名
+- **自动模式**（默认）：跟随系统主题变化
+- **手动模式**：点击切换明暗主题
+- **桌面端**：右键切换自动/手动模式
+- **移动端**：长按切换自动/手动模式
 
-## 关于抖音短链接处理
+## 🔧 项目结构
 
-由于浏览器的CORS限制，直接前端处理抖音短链接会失败。本工具通过多层后端解决：
+```
+├── index.html                 # 主页面
+├── server.js                  # 本地开发服务器
+├── package.json              # 项目配置
+├── wrangler.toml             # Cloudflare 配置
+├── assets/                   # 静态资源
+│   ├── css/styles.css        # 样式文件
+│   └── js/
+│       ├── script.js         # 前端逻辑
+│       ├── smart-redirect.js # 重定向处理
+│       └── frontend-redirect.js
+├── functions/                # Cloudflare Functions
+│   └── api/
+│       ├── redirect.js       # 短链重定向
+│       ├── download.js       # 下载代理
+│       └── test.js           # 测试接口
+├── workers/                  # Cloudflare Workers
+│   └── redirect-expander/
+│       ├── wrangler.toml     # Worker 配置
+│       └── src/index.ts      # Worker 代码
+└── test-*.html              # 测试页面
+```
 
-1. **Cloudflare Functions/Workers**：生产环境推荐，边缘计算，无跨域限制
-2. **Node.js代理**：本地开发和自建服务器
-3. **用户引导**：自动检测抖音短链接，引导用户手动获取完整URL
+## 🔄 工作流程
 
-## 注意事项
+1. **前端处理**：用户输入抖音链接
+2. **短链解析**：调用 Functions 处理重定向
+3. **视频解析**：通过第三方 API 获取视频信息
+4. **链接提取**：解析不同分辨率的下载链接
+5. **代理下载**：通过 Workers 代理下载视频文件
 
-- 本工具仅用于学习研究，请遵守抖音使用协议
-- 功能依赖外部API，API不可用时会降级处理
-- Cloudflare免费额度有限，超出可能产生费用
-- 建议定期更新依赖以修复安全漏洞
+## ⚠️ 注意事项
 
-## 常见问题
+- 本工具仅用于学习研究，请遵守相关平台使用协议
+- 依赖第三方 API 服务，API 不可用时会影响功能
+- Cloudflare 免费额度有限，建议监控使用量
+- 定期更新依赖以确保安全性
 
-### Q: 部署后无法连接到API？
-**A:** 检查网络连接和API可用性。可能是CORS问题，需配置服务端CORS策略。
+## 🐛 常见问题
 
-### Q: 抖音短链接无法解析？
-**A:** Cloudflare部署自动启用重定向处理。如失败，提供手动输入完整URL的选项。
+### Q: 短链接无法解析？
+**A:** 检查网络连接，或尝试手动复制完整 URL。
 
-### Q: 视频下载没有声音？
-**A:** 可能是抖音音视频分离存储，工具会优先获取包含音频的全格式视频。
+### Q: 下载失败？
+**A:** 确认视频链接有效，检查网络连接和浏览器设置。
 
-### Q: Cloudflare部署失败？
-**A:** 检查functions目录结构和代码语法。也可能需要更新wrangler版本。
+### Q: CORS 错误？
+**A:** 生产环境使用 Cloudflare 服务自动解决 CORS 问题。
 
-### Q: 如何自定义域名？
-**A:** 在Cloudflare/Pages/Netlify控制台设置添加自定义域名，系统会自动配置DNS和SSL。
+### Q: Workers 部署失败？
+**A:** 检查 `wrangler.toml` 配置和认证状态。
 
-## 贡献
+## 🤝 贡献
 
-欢迎提交Issue和Pull Request！请确保：
+欢迎提交 Issue 和 Pull Request！
 
-- 遵循现有的代码风格
-- 新功能包含相应的测试
-- 提交前运行 `npm test`
+- 遵循现有代码风格
+- 新功能请包含相应测试
+- 提交前请确保代码质量
 
-## 许可证
+## 📄 许可证
 
-MIT License - 详见LICENSE文件
+MIT License
