@@ -111,8 +111,24 @@
         </div>
     </footer>
 
-    <script src="assets/js/smart-redirect.js"></script>
-    <script src="assets/js/script.js"></script>
+    <!-- 工具函数 (最先加载) -->
+    <script src="assets/js/utils.js"></script>
+
+    <!-- 独立功能模块 -->
+    <script src="assets/js/browser-detector.js"></script>
+    <script src="assets/js/theme-manager.js"></script>
+    <script src="assets/js/rate-limiter.js"></script>
+
+    <!-- 核心业务模块 -->
+    <script src="assets/js/redirect-handler.js"></script>
+    <script src="assets/js/download-handler.js"></script>
+    <script src="assets/js/api-handler.js"></script>
+    <script src="assets/js/download-options.js"></script>
+    <script src="assets/js/video-display.js"></script>
+    <script src="assets/js/version-update.js"></script>
+
+    <!-- 主入口 (最后加载) -->
+    <script src="assets/js/main.js"></script>
     <script>
         // 页面加载完成后检查更新
         document.addEventListener('DOMContentLoaded', function () {
