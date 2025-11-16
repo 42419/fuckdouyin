@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
-  "build_date": "2025-01-27T00:00:00Z",
+  "build_date": "2025-11-16T00:00:00Z",
   "changelog": [
     "=== 重大重构 ===",
     "• 完成前端JavaScript模块化重构，将单一script.js拆分为11个功能模块",
@@ -31,7 +31,7 @@
   "history": [
     {
       "version": "1.3.0",
-      "build_date": "2025-01-27T00:00:00Z",
+      "build_date": "2025-11-16T00:00:00Z",
       "changelog": [
         "=== 重大重构 ===",
         "• 完成前端JavaScript模块化重构，将单一script.js拆分为11个功能模块",
