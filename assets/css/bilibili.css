@@ -1,0 +1,134 @@
+/* 哔哩哔哩页面专属样式模块 */
+
+.result-section {
+    max-width: var(--max-width);
+    margin: 40px auto;
+    padding: 0 24px;
+}
+
+.result-container {
+    background: var(--bg-card);
+    border-radius: var(--border-radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+}
+
+.result-container h2 {
+    color: var(--primary-color);
+    margin-bottom: 24px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* 信息网格 */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.info-value {
+    color: var(--text-color);
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+/* 清晰度选择器 */
+.quality-selector {
+    margin: 32px 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.quality-selector h3 {
+    color: var(--primary-color);
+    margin-bottom: 16px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.quality-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.quality-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.quality-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.quality-label {
+    display: block;
+    padding: 16px;
+    background: var(--glass-bg);
+    border: 2px solid var(--glass-border);
+    border-radius: var(--border-radius-small);
+    transition: var(--transition-fast);
+    cursor: pointer;
+}
+
+.quality-option input[type="radio"]:checked + .quality-label {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.quality-option:hover .quality-label {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-card);
+}
+
+.quality-name {
+    display: block;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.quality-details {
+    display: block;
+    color: var(--text-light);
+    font-size: 13px;
+}
+
+/* 下载操作 */
+.download-actions {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.download-btn.large {
+    padding: 16px 32px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: var(--border-radius);
+    min-width: 200px;
+}

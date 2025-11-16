@@ -1,0 +1,75 @@
+/* CSS变量定义模块 */
+:root {
+    /* 主色调 */
+    --primary-color: #FFFCEE;
+    --primary-light: #FFFDF5;
+    --primary-dark: #F5F0E1;
+    --hover-color: #EDE8D9;
+    
+    /* 背景色 */
+    --bg-header: rgba(255, 252, 238, 0.95);
+    --bg-menu: rgba(255, 252, 238, 0.98);
+    --bg-main: linear-gradient(135deg, #FFFDF5 0%, #FFFCEE 25%, #F9F6E7 50%, #F5F0E1 75%, #EDE8D9 100%);
+    --bg-card: rgba(255, 252, 238, 0.95);
+    --bg-hover: rgba(79, 70, 229, 0.08);
+    --bg-active: rgba(79, 70, 229, 0.12);
+    
+    /* 文字颜色 */
+    --text-color: #7B3306;
+    --text-light: #6D6B6E;
+    --text-white: #2D2A2E;
+    
+    /* 阴影 */
+    --shadow: 0 8px 32px rgba(45, 42, 46, 0.1);
+    --shadow-hover: 0 12px 40px rgba(45, 42, 46, 0.15);
+    --shadow-card: 0 4px 20px rgba(45, 42, 46, 0.08);
+    
+    /* 圆角 */
+    --border-radius: 16px;
+    --border-radius-small: 8px;
+    
+    /* 过渡动画 */
+    --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* 布局 */
+    --max-width: 1200px;
+    
+    /* 毛玻璃效果 */
+    --glass-bg: rgba(255, 252, 238, 0.1);
+    --glass-border: rgba(255, 252, 238, 0.2);
+}
+
+/* 明亮模式下的背景色变量适配 */
+@media (prefers-color-scheme: light) {
+    :root {
+        --bg-hover: rgba(45, 42, 46, 0.08);
+        --bg-active: rgba(45, 42, 46, 0.12);
+    }
+}
+
+/* 手动切换到明亮模式时的背景色变量适配 */
+body[data-theme="light"] {
+    --bg-hover: rgba(45, 42, 46, 0.08);
+    --bg-active: rgba(45, 42, 46, 0.12);
+}
+
+/* 黑暗模式下的背景色变量适配 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-hover: rgba(255, 252, 238, 0.08);
+        --bg-active: rgba(255, 252, 238, 0.12);
+        --bg-card: rgba(45, 42, 46, 0.95);
+        --text-color: #FFFCEE;
+        --glass-border: rgba(255, 252, 238, 0.2);
+    }
+}
+
+/* 手动切换到黑暗模式时的背景色变量适配 */
+body[data-theme="dark"] {
+    --bg-hover: rgba(255, 252, 238, 0.08);
+    --bg-active: rgba(255, 252, 238, 0.12);
+    --bg-card: rgba(45, 42, 46, 0.95);
+    --text-color: #FFFCEE;
+    --glass-border: rgba(255, 252, 238, 0.2);
+}

@@ -88,14 +88,18 @@ function showUpdateModal(versionInfo) {
             });
             
             // 显示所有历史更新信息
-            sortedHistory.forEach(version => {
+            sortedHistory.forEach((version, index) => {
+                // 创建版本容器
+                const versionContainer = document.createElement('div');
+                versionContainer.className = index === 0 ? 'version-container latest-version' : 'version-container history-version';
+                
                 // 创建版本标题
                 const versionTitle = document.createElement('div');
                 versionTitle.className = 'version-title';
                 // 格式化日期：从ISO格式转换为YYYY-MM-DD
                 const buildDate = version.build_date ? new Date(version.build_date).toISOString().split('T')[0] : '';
                 versionTitle.innerHTML = `<strong>v${version.version}${buildDate ? ` (${buildDate})` : ''}</strong>`;
-                changelogList.appendChild(versionTitle);
+                versionContainer.appendChild(versionTitle);
                 
                 // 创建更新列表
                 const versionList = document.createElement('ul');
@@ -106,16 +110,20 @@ function showUpdateModal(versionInfo) {
                     versionList.appendChild(li);
                 });
                 
-                changelogList.appendChild(versionList);
+                versionContainer.appendChild(versionList);
+                changelogList.appendChild(versionContainer);
             });
         } else {
             // 如果没有历史信息，显示当前版本的更新日志
+            const versionContainer = document.createElement('div');
+            versionContainer.className = 'version-container latest-version';
+            
             const currentTitle = document.createElement('div');
             currentTitle.className = 'version-title';
             // 格式化日期：从ISO格式转换为YYYY-MM-DD
             const buildDate = versionInfo.build_date ? new Date(versionInfo.build_date).toISOString().split('T')[0] : '';
             currentTitle.innerHTML = `<strong>v${versionInfo.version}${buildDate ? ` (${buildDate})` : ''}</strong>`;
-            changelogList.appendChild(currentTitle);
+            versionContainer.appendChild(currentTitle);
             
             const currentList = document.createElement('ul');
             currentList.className = 'version-changelog';
@@ -125,7 +133,8 @@ function showUpdateModal(versionInfo) {
                 currentList.appendChild(li);
             });
             
-            changelogList.appendChild(currentList);
+            versionContainer.appendChild(currentList);
+            changelogList.appendChild(versionContainer);
         }
         
         // 显示弹窗
