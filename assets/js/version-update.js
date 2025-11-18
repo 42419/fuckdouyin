@@ -67,13 +67,16 @@ async function checkForUpdates(forceShow = false) {
         // 检查本地存储的版本号
         const lastVersion = localStorage.getItem('app_version');
         const lastUpdateTime = localStorage.getItem('last_update_check');
-        // 如果已存在旧版本且与新版本不同 => 直接执行强制刷新逻辑
+        // 如果已存在旧版本且与新版本不同 => 显示更新弹窗，关闭后刷新
         if (lastVersion && lastVersion !== versionInfo.version) {
-            // 先更新本地版本号，防止刷新后再次进入死循环
+            // 显示更新弹窗
+            showUpdateModal(versionInfo);
+            // 设置标志，表示需要刷新
+            localStorage.setItem('pending_refresh', 'true');
+            // 更新本地版本号
             localStorage.setItem('app_version', versionInfo.version);
             localStorage.setItem('last_update_check', Date.now().toString());
-            await forceFullRefresh(versionInfo.version);
-            return; // 刷新流程已触发
+            return; // 等待用户关闭弹窗后刷新
         }
         
         // 如果是第一次访问或版本不同，显示更新提示
@@ -399,6 +402,15 @@ function closeUpdateModal() {
             modal.style.display = 'none';
             modal.classList.remove('closing');
             modalContent.classList.remove('closing');
+            
+            // 检查是否需要刷新（版本更新后）
+            if (localStorage.getItem('pending_refresh') === 'true') {
+                localStorage.removeItem('pending_refresh');
+                // 延迟刷新以确保动画完成
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
+            }
         }, duration);
     }
 }
