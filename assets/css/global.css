@@ -15,6 +15,11 @@ body {
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
+    /* 禁用文本选择 */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 /* 主要内容区域 */

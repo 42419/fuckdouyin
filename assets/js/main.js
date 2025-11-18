@@ -30,6 +30,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // 设置当前页面的激活导航项
     setActiveNavItem();
     
+    // 禁用右键菜单
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+    
+    // 禁用复制快捷键 (Ctrl+C, Cmd+C)
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+            e.preventDefault();
+        }
+    });
+    
     // 获取表单元素
     const downloadForm = document.querySelector('.download-form');
     const searchInput = document.getElementById('search');
