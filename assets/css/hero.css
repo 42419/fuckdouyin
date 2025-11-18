@@ -61,6 +61,31 @@ body[data-theme="dark"] .hero-content h1 {
     z-index: 1;
 }
 
+/* 移动端暗色模式动画降频：防止边缘阴影在手机上快速闪烁 */
+@media (max-width: 768px) and (prefers-color-scheme: dark) {
+    .hero-content {
+        /* 进一步优化：直接禁用动画，使用静态柔和阴影避免闪烁 */
+        animation: none !important;
+        box-shadow: 0 0 14px rgba(255, 252, 238, 0.15), 0 0 26px rgba(255, 252, 238, 0.08);
+    }
+}
+
+@media (max-width: 768px) {
+    body[data-theme="dark"] .hero-content {
+        animation: none !important;
+        box-shadow: 0 0 14px rgba(255, 252, 238, 0.15), 0 0 26px rgba(255, 252, 238, 0.08);
+    }
+}
+
+/* 尊重减少动态偏好：在移动端直接禁用动画进一步降低能耗与闪烁 */
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+    .hero-content,
+    body[data-theme="dark"] .hero-content {
+        animation: none !important;
+        box-shadow: 0 0 12px rgba(255, 252, 238, 0.18);
+    }
+}
+
 .hero-content h1 {
     font-size: 48px;
     font-weight: 800;

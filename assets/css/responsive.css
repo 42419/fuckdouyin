@@ -205,21 +205,24 @@
     
     /* 结果展示 */
     .result-section {
-        margin: 0 12px 60px;
-        width: 100% !important;
-        max-width: none !important;
+        /* 居中：改用自动左右外边距 + 统一最大宽度，避免在部分设备上贴边 */
+        margin: 0 auto 60px;
+        width: 100%;
+        max-width: 860px; /* 与视觉保持一致，可按需调整 */
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: stretch; /* 让内部容器占满并自行决定内边距 */
+        padding: 0 16px; /* 适度内边距防止贴边 */
     }
     
     .result-container {
         padding: 20px 16px;
         border-radius: 12px;
-        width: 100% !important;
-        max-width: none !important;
+        width: 100%;
+        max-width: 800px; /* 比外层稍窄产生居中留白 */
         box-sizing: border-box;
+        margin: 0 auto; /* 保持自身居中 */
     }
     
     .result-container h2 {
@@ -845,16 +848,18 @@
     }
     
     .result-section {
-        margin: 0 8px 40px;
-        width: 100% !important;
-        max-width: none !important;
+        margin: 0 auto 40px;
+        width: 100%;
+        max-width: 860px;
+        padding: 0 12px;
     }
     
     .result-container {
         padding: 16px 12px;
         border-radius: 8px;
-        width: 100% !important;
-        max-width: none !important;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
     }
     
     .result-container h2 {
@@ -1056,11 +1061,15 @@
     }
     
     .result-section {
-        margin: 0 8px 30px;
+        margin: 0 auto 30px;
+        max-width: 860px;
+        padding: 0 8px;
     }
     
     .result-container {
         padding: 12px 8px;
+        max-width: 800px;
+        margin: 0 auto;
     }
     
     .author-info {

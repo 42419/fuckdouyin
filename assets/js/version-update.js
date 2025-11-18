@@ -1,13 +1,61 @@
 // ==================== 版本更新检测模块 ====================
 
 // 更新检测和提示功能
-let currentVersion = '1.0.0'; // 当前版本号
+let currentVersion = '1.0.0'; // 当前版本号（默认占位）
+
+// 预取并强制重新验证所有静态资源，随后刷新页面
+async function forceFullRefresh(newVersion) {
+    try {
+        // 标记进行中的刷新，避免重复触发
+        if (window.__forceRefreshing) return;
+        window.__forceRefreshing = true;
+
+        // 清理 Cache Storage（与 HTTP 缓存不同，但可删除自定义缓存）
+        if ('caches' in window) {
+            try {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+            } catch (e) {
+                console.log('Cache Storage 清理失败:', e);
+            }
+        }
+
+        // 收集需要强制刷新的资源（CSS/JS）
+        const assetElements = [
+            ...document.querySelectorAll('link[rel="stylesheet"]'),
+            ...document.querySelectorAll('script[src]')
+        ];
+
+        // 使用 fetch cache:'reload' 主动重新验证原始资源 URL（不加参数，确保覆盖后续正常加载）
+        const preloadTasks = [];
+        assetElements.forEach(el => {
+            const originalUrl = el.href || el.src;
+            if (!originalUrl) return;
+            preloadTasks.push(
+                fetch(originalUrl, { cache: 'reload' }).catch(err => {
+                    console.log('预取失败:', originalUrl, err);
+                })
+            );
+        });
+
+        // 版本文件强制重新验证
+        preloadTasks.push(fetch('/version.json?force=' + Date.now(), { cache: 'reload' }).catch(()=>{}));
+
+        await Promise.all(preloadTasks);
+        // 触发真正的页面刷新
+        console.log('版本变化，执行强制刷新 ->', newVersion);
+        window.location.reload();
+    } catch (e) {
+        console.log('强制刷新流程异常，直接刷新:', e);
+        window.location.reload();
+    }
+}
 
 // 检查更新
 async function checkForUpdates(forceShow = false) {
     try {
         // 获取版本信息，添加时间戳和版本戳避免缓存
-        const response = await fetch('/version.json?v=' + Date.now() + '&version=1.1.3');
+        const response = await fetch('/version.json?v=' + Date.now());
         
         // 检查响应状态
         if (!response.ok) {
@@ -19,20 +67,17 @@ async function checkForUpdates(forceShow = false) {
         // 检查本地存储的版本号
         const lastVersion = localStorage.getItem('app_version');
         const lastUpdateTime = localStorage.getItem('last_update_check');
-        const cssVersion = localStorage.getItem('css_version');
-        
-        // 检查CSS版本，如果CSS版本不同，强制刷新页面
-        if (cssVersion !== '1.1.3') {
-            localStorage.setItem('css_version', '1.1.3');
-            // 如果CSS版本变化，强制重新加载页面以获取最新样式
-            if (cssVersion) {
-                window.location.reload();
-                return;
-            }
+        // 如果已存在旧版本且与新版本不同 => 直接执行强制刷新逻辑
+        if (lastVersion && lastVersion !== versionInfo.version) {
+            // 先更新本地版本号，防止刷新后再次进入死循环
+            localStorage.setItem('app_version', versionInfo.version);
+            localStorage.setItem('last_update_check', Date.now().toString());
+            await forceFullRefresh(versionInfo.version);
+            return; // 刷新流程已触发
         }
         
         // 如果是第一次访问或版本不同，显示更新提示
-        if (!lastVersion || lastVersion !== versionInfo.version || forceShow) {
+        if (!lastVersion || forceShow) {
             // 显示更新提示
             showUpdateModal(versionInfo);
             
@@ -77,65 +122,39 @@ function showUpdateModal(versionInfo) {
     const changelogList = document.getElementById('updateChangelog');
     
     if (modal && changelogList) {
-        // 清空之前的更新日志
+        // 清空并以 Markdown 渲染
         changelogList.innerHTML = '';
-        
-        // 检查是否有历史版本信息
-        if (versionInfo.history && versionInfo.history.length > 0) {
-            // 按版本号降序排列（从高到低）
-            const sortedHistory = versionInfo.history.sort((a, b) => {
-                return compareVersions(b.version, a.version);
-            });
-            
-            // 显示所有历史更新信息
-            sortedHistory.forEach((version, index) => {
-                // 创建版本容器
-                const versionContainer = document.createElement('div');
-                versionContainer.className = index === 0 ? 'version-container latest-version' : 'version-container history-version';
-                
-                // 创建版本标题
-                const versionTitle = document.createElement('div');
-                versionTitle.className = 'version-title';
-                // 格式化日期：从ISO格式转换为YYYY-MM-DD
-                const buildDate = version.build_date ? new Date(version.build_date).toISOString().split('T')[0] : '';
-                versionTitle.innerHTML = `<strong>v${version.version}${buildDate ? ` (${buildDate})` : ''}</strong>`;
-                versionContainer.appendChild(versionTitle);
-                
-                // 创建更新列表
-                const versionList = document.createElement('ul');
-                versionList.className = 'version-changelog';
-                
-                version.changelog.forEach(item => {
-                    const li = createChangelogItem(item);
-                    versionList.appendChild(li);
-                });
-                
-                versionContainer.appendChild(versionList);
-                changelogList.appendChild(versionContainer);
-            });
-        } else {
-            // 如果没有历史信息，显示当前版本的更新日志
+
+        // 生成所有版本的渲染数据（无 history 时用当前）
+        const versions = (versionInfo.history && versionInfo.history.length > 0)
+            ? [...versionInfo.history].sort((a, b) => compareVersions(b.version, a.version))
+            : [versionInfo];
+
+        versions.forEach((v, idx) => {
             const versionContainer = document.createElement('div');
-            versionContainer.className = 'version-container latest-version';
-            
-            const currentTitle = document.createElement('div');
-            currentTitle.className = 'version-title';
-            // 格式化日期：从ISO格式转换为YYYY-MM-DD
-            const buildDate = versionInfo.build_date ? new Date(versionInfo.build_date).toISOString().split('T')[0] : '';
-            currentTitle.innerHTML = `<strong>v${versionInfo.version}${buildDate ? ` (${buildDate})` : ''}</strong>`;
-            versionContainer.appendChild(currentTitle);
-            
-            const currentList = document.createElement('ul');
-            currentList.className = 'version-changelog';
-            
-            versionInfo.changelog.forEach(item => {
-                const li = createChangelogItem(item);
-                currentList.appendChild(li);
+            versionContainer.className = idx === 0 ? 'version-container latest-version' : 'version-container history-version';
+
+            const buildDate = v.build_date ? new Date(v.build_date).toISOString().split('T')[0] : '';
+                const headingHtml = `<div class="version-title"><strong>v${v.version}${buildDate ? ` (${buildDate})` : ''}</strong></div>`;
+            versionContainer.insertAdjacentHTML('beforeend', headingHtml);
+
+            // 将旧格式 '=== 标题 ===' 转换为 markdown '### 标题'
+            const normalizedLines = v.changelog.map(line => {
+                const trimmed = line.trim();
+                const match = trimmed.match(/^===\s*(.+?)\s*===$/);
+                if (match) return '### ' + match[1];
+                return line;
             });
-            
-            versionContainer.appendChild(currentList);
+
+            const markdownText = normalizedLines.join('\n');
+            const html = parseMarkdown(markdownText);
+
+            const bodyWrapper = document.createElement('div');
+            bodyWrapper.className = 'markdown-body';
+            bodyWrapper.innerHTML = html;
+            versionContainer.appendChild(bodyWrapper);
             changelogList.appendChild(versionContainer);
-        }
+        });
         
         // 显示弹窗
         modal.style.display = 'flex';
@@ -168,6 +187,159 @@ function showUpdateModal(versionInfo) {
                 closeUpdateModal();
             }
         });
+    }
+}
+
+// 轻量 Markdown 解析（标题/列表/粗体/斜体/内联代码/分段）
+function parseMarkdown(md) {
+    // 安全：先转义，再恢复我们生成的标签
+    const escapeHtml = (str) => str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    // 预处理：统一换行，去除 Windows 回车
+    md = md.replace(/\r/g, '').trim();
+
+    // 处理代码块 ```
+    let inCodeBlock = false;
+    let codeBlockLang = '';
+    const lines = md.split(/\n/);
+    const out = [];
+    let listBuffer = [];
+    let blockquoteBuffer = [];
+
+    const flushList = () => {
+        if (listBuffer.length) {
+            out.push('<ul>' + listBuffer.map(item => `<li>${item}</li>`).join('') + '</ul>');
+            listBuffer = [];
+        }
+    };
+
+    lines.forEach(rawLine => {
+        let line = rawLine;
+        const trimmed = line.trim();
+        // 代码块开始/结束 (支持语言) ```lang
+        const codeFenceMatch = trimmed.match(/^```(.*)$/);
+        if (codeFenceMatch) {
+            if (inCodeBlock) {
+                // 关闭代码块：输出累积内容并包裹行号
+                const codeContent = blockquoteBuffer.join('\n'); // 复用 buffer 临时存储代码行
+                blockquoteBuffer = [];
+                const htmlLines = codeContent.split('\n').map(l => `<span class=\"code-line\">${escapeHtml(l)}</span>`).join('');
+                out.push(`<pre class=\"code-block language-${codeBlockLang}\"><code>${htmlLines}</code></pre>`);
+                inCodeBlock = false;
+                codeBlockLang = '';
+            } else {
+                flushList();
+                flushBlockquote();
+                inCodeBlock = true;
+                codeBlockLang = (codeFenceMatch[1] || '').trim().toLowerCase();
+                blockquoteBuffer = []; // 用作代码行缓存
+            }
+            return;
+        }
+        if (inCodeBlock) {
+            blockquoteBuffer.push(line);
+            return;
+        }
+
+        // 标题 (#, ##, ### ...)
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+            flushList();
+            flushBlockquote();
+            const level = headingMatch[1].length;
+            const content = inlineMarkdown(headingMatch[2]);
+            out.push(`<h${level}>${content}</h${level}>`);
+            return;
+        }
+
+        // 列表项 (- 或 * 或 • )
+        const listMatch = line.match(/^\s*([-*•])\s+(.*)$/);
+        if (listMatch) {
+            flushBlockquote();
+            listBuffer.push(inlineMarkdown(listMatch[2]));
+            return;
+        }
+
+        // Blockquote > 内容 (允许嵌套简单处理)
+        const bqMatch = line.match(/^>\s?(.*)$/);
+        if (bqMatch) {
+            flushList();
+            blockquoteBuffer.push(inlineMarkdown(bqMatch[1]));
+            return;
+        }
+
+        // 水平线
+        if (/^---+$/.test(line.trim())) {
+            flushList();
+            flushBlockquote();
+            out.push('<hr />');
+            return;
+        }
+
+        // 空行 => 段落分隔
+        if (line.trim() === '') {
+            flushList();
+            flushBlockquote();
+            out.push('');
+            return;
+        }
+
+        flushList();
+        flushBlockquote();
+        out.push('<p>' + inlineMarkdown(line) + '</p>');
+    });
+    flushList();
+    flushBlockquote();
+
+    return out.join('\n')
+        // 恢复在 inlineMarkdown 中生成的标签允许的范围（其本身已经构造安全标签）
+        .replace(/&lt;(strong|em|code|br)>&lt;\/\1>/g, '<$1></$1>');
+}
+
+function inlineMarkdown(text) {
+    // 转义基础 HTML
+    let escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    // 粗体 **text**
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // 斜体 *text* (避免与粗体冲突，粗体已处理)
+    escaped = escaped.replace(/(^|\s)\*(?!\s)([^*]+?)\*(?=\s|$)/g, '$1<em>$2</em>');
+    // 行内代码 `code`
+    escaped = escaped.replace(/`([^`]+?)`/g, (m, c) => `<code>${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code>`);
+    // 链接 [text](url)
+    escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, txt, url) => {
+        const safeUrl = sanitizeUrl(url);
+        if (!safeUrl) return txt; // 不安全则返回纯文本
+        return `<a href=\"${safeUrl}\" target=\"_blank\" rel=\"noopener noreferrer\">${txt}</a>`;
+    });
+    // 自动链接 http/https
+    escaped = escaped.replace(/(https?:\/\/[^\s)]+)(?![^<]*>)/g, (m) => {
+        const safeUrl = sanitizeUrl(m);
+        if (!safeUrl) return m;
+        return `<a href=\"${safeUrl}\" target=\"_blank\" rel=\"noopener noreferrer\">${m}</a>`;
+    });
+    return escaped;
+}
+
+function sanitizeUrl(url) {
+    try {
+        const trimmed = url.trim();
+        if (/^(javascript:)/i.test(trimmed)) return null;
+        if (/^(https?:|mailto:)/i.test(trimmed)) return trimmed;
+        return null; // 只允许 http/https/mailto
+    } catch { return null; }
+}
+
+function flushBlockquote() {
+    if (typeof blockquoteBuffer !== 'undefined' && blockquoteBuffer.length) {
+        const inner = blockquoteBuffer.map(l => `<p>${l}</p>`).join('');
+        out.push(`<blockquote>${inner}</blockquote>`);
+        blockquoteBuffer = [];
     }
 }
 
@@ -218,23 +390,15 @@ function closeUpdateModal() {
     const modalContent = modal ? modal.querySelector('.update-modal-content') : null;
     
     if (modal && modalContent) {
-        // 检查是否为移动设备
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        // 统一使用关闭动画（桌面与移动一致）
+        modal.classList.add('closing');
+        modalContent.classList.add('closing');
         
-        if (isMobile && window.innerWidth <= 768) {
-            // 移动端：添加关闭动画
-            modal.classList.add('closing');
-            modalContent.classList.add('closing');
-            
-            // 动画结束后隐藏弹窗
-            setTimeout(() => {
-                modal.style.display = 'none';
-                modal.classList.remove('closing');
-                modalContent.classList.remove('closing');
-            }, 300); // 与CSS动画时长保持一致
-        } else {
-            // 桌面端：直接隐藏
+        const duration = 380; // 与 CSS 中 modalFadeOut / contentFadeOut 时长同步
+        setTimeout(() => {
             modal.style.display = 'none';
-        }
+            modal.classList.remove('closing');
+            modalContent.classList.remove('closing');
+        }, duration);
     }
 }
