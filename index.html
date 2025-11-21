@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="assets/css/hero.css">
     <link rel="stylesheet" href="assets/css/result.css">
     <link rel="stylesheet" href="assets/css/modal.css">
+    <link rel="stylesheet" href="assets/css/history.css">
     <link rel="stylesheet" href="assets/css/responsive.css">
 </head>
 
@@ -91,6 +92,17 @@
                 </div>
             </div>
         </section>
+
+        <!-- 历史记录区域 -->
+        <section id="history-section">
+            <div class="history-header">
+                <h2>📜 解析历史</h2>
+                <button class="clear-history-btn" onclick="clearHistory()">清空历史</button>
+            </div>
+            <div id="history-list" class="history-list">
+                <!-- 历史记录项将通过JS动态插入 -->
+            </div>
+        </section>
     </main>
 
     <!-- 更新提示弹窗 -->
@@ -131,6 +143,7 @@
     <script src="assets/js/api-handler.js"></script>
     <script src="assets/js/download-options.js"></script>
     <script src="assets/js/video-display.js"></script>
+    <script src="assets/js/history.js"></script>
     <script src="assets/js/version-update.js"></script>
 
     <!-- 主入口 (最后加载) -->

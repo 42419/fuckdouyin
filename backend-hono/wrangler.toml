@@ -1,0 +1,6 @@
+name = "douyin-hono"
+compatibility_date = "2024-02-01"
+main = "src/index.ts"
+
+[observability]
+enabled = true

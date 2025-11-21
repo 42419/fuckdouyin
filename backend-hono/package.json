@@ -1,0 +1,16 @@
+{
+  "name": "douyin-hono-api",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "deploy:cf": "wrangler deploy --minify src/index.ts",
+    "build:netlify": "mkdir -p public && cp -r ../assets ../index.html ../favicon.ico public/"
+  },
+  "dependencies": {
+    "hono": "^4.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.28.0",
+    "@cloudflare/workers-types": "^4.20240208.0"
+  }
+}

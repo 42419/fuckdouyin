@@ -24,6 +24,10 @@ function fetchVideoData(apiUrl) {
         .then(data => {
             showLoading(false);
             displayVideoData(data);
+            // 保存到历史记录
+            if (typeof addToHistory === 'function') {
+                addToHistory(data);
+            }
         })
         .catch(error => {
             showLoading(false);

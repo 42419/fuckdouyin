@@ -49,3 +49,5 @@ Thumbs.db
 ehthumbs.db
 
 cache.md
+# Local Netlify folder
+.netlify

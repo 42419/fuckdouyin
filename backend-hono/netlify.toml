@@ -1,0 +1,7 @@
+[build]
+  command = "npm install"
+  publish = "public"
+
+[[edge_functions]]
+  path = "/api/*"
+  function = "api"

@@ -43,8 +43,9 @@ async function handleDownload(element, event) {
 
 // 本地服务器下载
 function tryLocalServerDownload(url, filename, element, originalText) {
-    // 使用本地服务器的下载API
-    const localApiUrl = `/api/download?url=${encodeURIComponent(url)}`;
+    // 动态获取 API 地址
+    const baseUrl = getApiBaseUrl();
+    const localApiUrl = `${baseUrl}/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename || 'video.mp4')}`;
     
     // 创建下载链接
     const link = document.createElement('a');

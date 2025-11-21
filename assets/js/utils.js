@@ -33,3 +33,25 @@ function compareVersions(versionA, versionB) {
     
     return 0;
 }
+
+// 获取 API 基础地址
+function getApiBaseUrl() {
+    const hostname = window.location.hostname;
+    
+    // 1. 本地开发环境
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:8787';
+    }
+    
+    // 2. Netlify 环境 (前后端同源)
+    if (hostname.endsWith('.netlify.app')) {
+        return ''; // 使用相对路径
+    }
+    
+    // 3. Cloudflare Pages 环境 (需要手动配置 Worker 地址)
+    // 如果你有固定的 Worker 地址，可以在这里直接返回
+    return 'https://douyin-hono.liyunfei.eu.org';
+    
+    // 默认尝试相对路径 (适用于前后端同源的情况)
+    return '';
+}

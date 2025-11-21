@@ -93,9 +93,11 @@ function handleShortLinkRedirect(shortLink, callback) {
 
 // 尝试使用本地Express.js服务器处理重定向
 function tryLocalServerRedirect(shortLink, callback) {
-    console.log('尝试使用本地Express.js服务器处理重定向:', shortLink);
+    console.log('尝试使用后端 API 处理重定向:', shortLink);
     
-    const localApiUrl = `/api/redirect?url=${encodeURIComponent(shortLink)}`;
+    // 动态获取 API 地址
+    const baseUrl = getApiBaseUrl();
+    const localApiUrl = `${baseUrl}/api/redirect?url=${encodeURIComponent(shortLink)}`;
     
     fetch(localApiUrl, {
         method: 'GET',
