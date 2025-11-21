@@ -1,5 +1,5 @@
 [build]
-  command = "npm install"
+  command = "npm run build:netlify"
   publish = "public"
 
 [[edge_functions]]

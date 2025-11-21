@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "wrangler dev src/index.ts",
     "deploy:cf": "wrangler deploy --minify src/index.ts",
-    "build:netlify": "mkdir -p public && cp -r ../assets ../index.html ../favicon.ico public/"
+    "build:netlify": "if not exist public mkdir public && xcopy /E /I /Y ..\\assets public\\assets && copy /Y ..\\index.html public\\ && copy /Y ..\\favicon.ico public\\"
   },
   "dependencies": {
     "hono": "^4.0.0"
