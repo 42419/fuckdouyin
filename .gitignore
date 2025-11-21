@@ -51,3 +51,10 @@ ehthumbs.db
 cache.md
 # Local Netlify folder
 .netlify
+
+# Cloudflare Workers
+.wrangler
+.dev.vars
+
+# Backend Hono Build Artifacts
+backend-hono/public/

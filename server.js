@@ -83,7 +83,18 @@ app.get('/api/download', async (req, res) => {
 
 // 启动服务器
 const serverPort = process.argv[2] || PORT;
-app.listen(serverPort, () => {
+const server = app.listen(serverPort, () => {
     console.log(`服务器运行在 http://localhost:${serverPort}`);
     console.log('请在浏览器中访问此地址来使用抖音下载工具');
+});
+
+// 优雅退出处理
+process.on('SIGINT', () => {
+    console.log('\n正在关闭服务器...');
+    server.close(() => {
+        console.log('服务器已关闭');
+        process.exit(0);
+    });
+    // 强制退出保障
+    setTimeout(() => process.exit(0), 1000);
 });
