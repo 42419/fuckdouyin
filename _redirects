@@ -1,3 +1,7 @@
+# API 反向代理 - 将 Netlify 的 API 请求转发到 Cloudflare Workers
+# 这样前端请求 /api/analysis 时，Netlify 会将其转发到 Hono 后端
+/api/*  https://douyin-hono.liyunfei.eu.org/api/:splat  200
+
 # Cloudflare Pages 缓存控制
 # 设置较短的缓存时间（5分钟）
 /*
