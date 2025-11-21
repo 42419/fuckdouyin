@@ -76,113 +76,40 @@ function handleShortLinkRedirect(shortLink, callback) {
         return;
     }
     
-    // 检查是否在本地环境运行
-    const isLocalEnvironment = window.location.hostname === 'localhost' || 
-                              window.location.hostname === '127.0.0.1' || 
-                              window.location.hostname === '0.0.0.0';
-    
-    if (isLocalEnvironment) {
-        // 本地环境优先使用Express.js服务器
-        console.log('检测到本地环境，使用Express.js服务器处理重定向');
-        tryLocalServerRedirect(shortLink, callback);
-    } else {
-        // 非本地环境使用Cloudflare Workers
-        tryCloudflareWorkers(shortLink, callback);
-    }
+    // 统一使用后端 API 处理重定向
+    requestRedirectApi(shortLink, callback);
 }
 
-// 尝试使用本地Express.js服务器处理重定向
-function tryLocalServerRedirect(shortLink, callback) {
-    console.log('尝试使用后端 API 处理重定向:', shortLink);
+// 统一请求后端重定向 API
+function requestRedirectApi(shortLink, callback) {
+    console.log('请求后端 API 处理重定向:', shortLink);
     
     // 动态获取 API 地址
     const baseUrl = getApiBaseUrl();
-    const localApiUrl = `${baseUrl}/api/redirect?url=${encodeURIComponent(shortLink)}`;
-    
-    fetch(localApiUrl, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
-    })
-    .then(response => {
-        console.log('本地服务器响应状态:', response.status);
-        if (!response.ok) {
-            throw new Error(`本地服务器请求失败: ${response.status} - ${response.statusText}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log('本地服务器响应数据:', data);
-        
-        if (data.url) {
-            console.log('本地服务器成功获取重定向URL:', data.url);
-            callback(data.url);
-        } else {
-            console.log('本地服务器无法处理，尝试智能重定向处理器');
-            // 备用方案：使用智能重定向处理器
-            if (typeof window.smartRedirectHandler !== 'undefined') {
-                window.smartRedirectHandler.handleRedirect(shortLink, callback);
-            } else {
-                console.log('所有重定向方法都失败');
-                callback(null);
-            }
-        }
-    })
-    .catch(error => {
-        console.error('本地服务器请求出错:', error.message);
-        console.log('本地服务器不可用，使用智能重定向处理器');
-        // 本地服务器失败，使用智能重定向处理器
-        if (typeof window.smartRedirectHandler !== 'undefined') {
-            window.smartRedirectHandler.handleRedirect(shortLink, callback);
-        } else {
-            console.log('所有重定向方法都失败');
-            callback(null);
-        }
-    });
-}
-
-// 尝试Cloudflare Workers重定向
-function tryCloudflareWorkers(shortLink, callback) {
-    console.log('尝试Cloudflare Workers重定向:', shortLink);
-    
-    const WORKER_ENDPOINT = 'https://redirect-expander.liyunfei.eu.org/expand';
-    const apiUrl = `${WORKER_ENDPOINT}?url=${encodeURIComponent(shortLink)}`;
+    const apiUrl = `${baseUrl}/api/redirect?url=${encodeURIComponent(shortLink)}`;
     
     fetch(apiUrl, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-        },
-        mode: 'cors',
-        credentials: 'omit'
+        }
     })
     .then(response => {
-        console.log('Cloudflare Workers响应状态:', response.status);
+        console.log('后端 API 响应状态:', response.status);
         if (!response.ok) {
-            throw new Error(`Workers请求失败: ${response.status} - ${response.statusText}`);
+            throw new Error(`API 请求失败: ${response.status} - ${response.statusText}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('Cloudflare Workers响应数据:', data);
+        console.log('后端 API 响应数据:', data);
         
         if (data.success === true && data.url) {
-            console.log('Cloudflare Workers成功获取重定向URL:', data.url);
+            console.log('成功获取重定向URL:', data.url);
             callback(data.url);
-        } else if (data.method === 'user_guidance_needed') {
-            console.log('Workers检测到需要用户引导，使用智能重定向处理器');
-            // 使用智能重定向处理器显示用户引导
-            if (typeof window.smartRedirectHandler !== 'undefined') {
-                window.smartRedirectHandler.handleRedirect(shortLink, callback);
-            } else {
-                console.log('所有重定向方法都失败');
-                callback(null);
-            }
         } else {
-            console.log('Workers无法处理，尝试智能重定向处理器');
+            console.log('后端无法处理，尝试智能重定向处理器');
             // 备用方案：使用智能重定向处理器
             if (typeof window.smartRedirectHandler !== 'undefined') {
                 window.smartRedirectHandler.handleRedirect(shortLink, callback);
@@ -193,9 +120,9 @@ function tryCloudflareWorkers(shortLink, callback) {
         }
     })
     .catch(error => {
-        console.error('Cloudflare Workers请求出错:', error.message);
-        console.log('Workers不可用，使用智能重定向处理器');
-        // Workers失败，使用智能重定向处理器
+        console.error('后端 API 请求出错:', error.message);
+        console.log('后端 API 不可用，使用智能重定向处理器');
+        // API 失败，使用智能重定向处理器
         if (typeof window.smartRedirectHandler !== 'undefined') {
             window.smartRedirectHandler.handleRedirect(shortLink, callback);
         } else {
@@ -204,3 +131,16 @@ function tryCloudflareWorkers(shortLink, callback) {
         }
     });
 }
+
+/* 移除旧的 tryLocalServerRedirect 和 tryCloudflareWorkers 函数 */
+/*
+// 尝试使用本地Express.js服务器处理重定向
+function tryLocalServerRedirect(shortLink, callback) {
+    // ...
+}
+
+// 尝试Cloudflare Workers重定向
+function tryCloudflareWorkers(shortLink, callback) {
+    // ...
+}
+*/
