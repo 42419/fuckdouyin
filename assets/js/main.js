@@ -91,31 +91,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 showLoading(true);
 
-                // 调用重定向处理函数
-                handleShortLinkRedirect(shortLink, function(redirectedUrl) {
-                    if (!redirectedUrl) {
-                        showLoading(false);
-                        alert('无法获取短链接的重定向地址，请稍后再试');
-                        return;
-                    }
-
-                    // 记录成功解析
-                    rateLimiter.recordRequest();
-
-                    // 从重定向后的URL中再次提取视频ID
-                    const finalAwemeId = extractAwemeId(redirectedUrl);
-                    if (!finalAwemeId) {
-                        showLoading(false);
-                        alert('无法从重定向后的URL中提取视频ID，请检查输入格式');
-                        return;
-                    }
-
-                    // 构建API请求URL - 使用fetch_one_video接口
-                    const apiUrl = `https://dapi.liyunfei.eu.org/api/douyin/web/fetch_one_video?aweme_id=${finalAwemeId}`;
-
-                    // 发送API请求
-                    fetchVideoData(apiUrl);
-                });
+                // 使用新的聚合解析接口 (BFF模式)
+                // 直接调用后端 /api/analysis，一次性完成重定向和解析
+                const baseUrl = getApiBaseUrl();
+                const analysisUrl = `${baseUrl}/api/analysis?url=${encodeURIComponent(shortLink)}`;
+                
+                fetchVideoData(analysisUrl);
+                
+                // 记录成功解析 (预先记录，虽然请求还没完成)
+                rateLimiter.recordRequest();
                 return;
             }
             
@@ -127,6 +111,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // 构建API请求URL - 使用fetch_one_video接口
+            // 如果是长链接直接提取到了ID，也可以走聚合接口，或者保持原样
+            // 为了统一体验和利用后端网络，建议也走聚合接口，或者直接请求第三方
+            // 这里保持原样，直接请求第三方，因为已经有ID了
             const apiUrl = `https://dapi.liyunfei.eu.org/api/douyin/web/fetch_one_video?aweme_id=${awemeId}`;
             
             // 显示加载状态
