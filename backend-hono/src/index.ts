@@ -1,7 +1,41 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import type { D1Database, KVNamespace } from '@cloudflare/workers-types'
 
-const app = new Hono()
+type Env = {
+  DB: D1Database
+  AUTH_KV: KVNamespace
+}
+
+type AuthUser = {
+  id: string
+  email: string
+}
+
+type Vars = {
+  authUser: AuthUser
+  authToken: string
+}
+
+const app = new Hono<{ Bindings: Env; Variables: Vars }>()
+
+const isHashedPassword = (value: string) => /^[0-9a-f]{64}$/i.test(value)
+
+const hashPassword = async (password: string): Promise<string> => {
+  const data = new TextEncoder().encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+const verifyPassword = async (plain: string, stored: string): Promise<boolean> => {
+  if (isHashedPassword(stored)) {
+    const hashed = await hashPassword(plain)
+    return hashed === stored
+  }
+  // 兼容旧的明文密码
+  return plain === stored
+}
 
 // 启用 CORS
 app.use('/*', cors())
@@ -62,7 +96,26 @@ app.get('/api/redirect', async (c) => {
  * GET /api/analysis?url=https://v.douyin.com/xxx/
  * 功能：后端处理重定向 + 调用第三方API，减少前端往返延迟
  */
-app.get('/api/analysis', async (c) => {
+const requireAuth = async (c: any, next: () => Promise<void>) => {
+  const auth = c.req.header('authorization') || ''
+  const [scheme, token] = auth.split(' ')
+
+  if (scheme !== 'Bearer' || !token) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const sessionJson = await c.env.AUTH_KV.get(`session:${token}`)
+  if (!sessionJson) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const session = JSON.parse(sessionJson) as AuthUser
+  c.set('authUser', session)
+  c.set('authToken', token)
+  await next()
+}
+
+app.get('/api/analysis', requireAuth, async (c) => {
   const url = c.req.query('url')
   if (!url) {
     return c.json({ error: 'Missing URL parameter' }, 400)
@@ -143,7 +196,7 @@ app.get('/api/analysis', async (c) => {
  * 视频下载代理接口
  * GET /api/download?url=https://...
  */
-app.get('/api/download', async (c) => {
+app.get('/api/download', requireAuth, async (c) => {
   const url = c.req.query('url')
   // 获取文件名参数，如果没有则默认为 video.mp4
   let filename = c.req.query('filename') || 'video.mp4'
@@ -187,6 +240,86 @@ app.get('/api/download', async (c) => {
   } catch (e) {
     return c.text(`Download Error: ${String(e)}`, 500)
   }
+})
+
+/**
+ * 简单登录接口
+ * POST /api/login
+ * body: { email: string, password: string }
+ * 返回: { token: string }
+ *
+ * 说明：
+ * - 这里先使用固定账号密码做演示：
+ *   email: admin@example.com
+ *   password: 123456
+ * - 验证通过后返回一个简单的 token（前端只需将其视为不透明字符串）
+ */
+app.post('/api/login', async (c) => {
+  const { email, password } = await c.req.json<{ email?: string; password?: string }>()
+
+  if (!email || !password) {
+    return c.json({ message: 'Missing email or password' }, 400)
+  }
+
+  const row = await c.env.DB.prepare(
+    'SELECT id, email, password FROM users WHERE email = ?'
+  )
+    .bind(email)
+    .first<AuthUser & { password: string }>()
+
+  if (!row || !(await verifyPassword(password, row.password))) {
+    return c.json({ message: 'Invalid email or password' }, 401)
+  }
+
+  const token = crypto.randomUUID()
+
+  await c.env.AUTH_KV.put(
+    `session:${token}`,
+    JSON.stringify({ id: row.id, email: row.email }),
+    { expirationTtl: 60 * 60 * 24 * 7 }
+  )
+
+  return c.json({ token })
+})
+
+app.get('/api/me', requireAuth, async (c) => {
+  const user = c.get('authUser')
+  return c.json({ user })
+})
+
+app.post('/api/change_password', requireAuth, async (c) => {
+  const { oldPassword, newPassword } = await c.req.json<{
+    oldPassword?: string
+    newPassword?: string
+  }>()
+
+  if (!oldPassword || !newPassword) {
+    return c.json({ message: 'Missing password' }, 400)
+  }
+
+  if (newPassword.length < 6) {
+    return c.json({ message: 'Password too short' }, 400)
+  }
+
+  const user = c.get('authUser') as AuthUser
+
+  const row = await c.env.DB.prepare(
+    'SELECT id, email, password FROM users WHERE id = ?'
+  )
+    .bind(user.id)
+    .first<AuthUser & { password: string }>()
+
+  if (!row || !(await verifyPassword(oldPassword, row.password))) {
+    return c.json({ message: 'Old password incorrect' }, 401)
+  }
+
+  const newHashed = await hashPassword(newPassword)
+
+  await c.env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
+    .bind(newHashed, user.id)
+    .run()
+
+  return c.json({ success: true })
 })
 
 // 导出 app，Cloudflare Workers 会自动识别
