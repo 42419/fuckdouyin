@@ -184,7 +184,29 @@ app.get('/api/analysis', requireAuth, async (c) => {
 
     const data = await apiResponse.json()
 
-    // 4. 返回结果
+    // 4. 保存解析历史
+    const user = c.get('authUser') as AuthUser
+    if (user) {
+      const title = data.desc || data.title || ''
+      // 尝试获取封面图，根据常见的抖音API返回结构
+      let cover = ''
+      if (data.cover_data && data.cover_data.cover && data.cover_data.cover.url_list) {
+        cover = data.cover_data.cover.url_list[0]
+      } else if (data.video && data.video.cover && data.video.cover.url_list) {
+        cover = data.video.cover.url_list[0]
+      }
+
+      // 使用 waitUntil 不阻塞响应
+      c.executionCtx.waitUntil(
+        c.env.DB.prepare(
+          'INSERT INTO parse_history (user_id, video_url, title, cover_url) VALUES (?, ?, ?, ?)'
+        )
+          .bind(user.id, finalUrl, title, cover)
+          .run()
+      )
+    }
+
+    // 5. 返回结果
     return c.json(data)
 
   } catch (e) {
@@ -320,6 +342,40 @@ app.post('/api/change_password', requireAuth, async (c) => {
     .run()
 
   return c.json({ success: true })
+})
+
+/**
+ * 获取解析历史接口
+ * GET /api/history?page=1&limit=10
+ */
+app.get('/api/history', requireAuth, async (c) => {
+  const user = c.get('authUser') as AuthUser
+  const page = parseInt(c.req.query('page') || '1')
+  const limit = parseInt(c.req.query('limit') || '10')
+  const offset = (page - 1) * limit
+
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM parse_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    )
+      .bind(user.id, limit, offset)
+      .all()
+
+    const totalResult = await c.env.DB.prepare(
+      'SELECT COUNT(*) as count FROM parse_history WHERE user_id = ?'
+    )
+      .bind(user.id)
+      .first<{ count: number }>()
+
+    return c.json({
+      data: results,
+      total: totalResult?.count || 0,
+      page,
+      limit
+    })
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
 })
 
 // 导出 app，Cloudflare Workers 会自动识别
