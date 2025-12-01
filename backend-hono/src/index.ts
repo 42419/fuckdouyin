@@ -216,9 +216,17 @@ app.get('/api/analysis', requireAuth, async (c) => {
       }
 
       // 使用 waitUntil 不阻塞响应
+      // 使用 INSERT OR REPLACE 来处理重复记录，更新时间戳
       c.executionCtx.waitUntil(
         c.env.DB.prepare(
-          'INSERT INTO parse_history (user_id, video_url, title, cover_url, author, author_avatar) VALUES (?, ?, ?, ?, ?, ?)'
+          `INSERT INTO parse_history (user_id, video_url, title, cover_url, author, author_avatar, created_at) 
+           VALUES (?, ?, ?, ?, ?, ?, strftime('%s', 'now'))
+           ON CONFLICT(user_id, video_url) DO UPDATE SET 
+           created_at = strftime('%s', 'now'),
+           title = excluded.title,
+           cover_url = excluded.cover_url,
+           author = excluded.author,
+           author_avatar = excluded.author_avatar`
         )
           .bind(user.id, finalUrl, title, cover, authorName, authorAvatar)
           .run()
