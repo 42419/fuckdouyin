@@ -187,21 +187,40 @@ app.get('/api/analysis', requireAuth, async (c) => {
     // 4. 保存解析历史
     const user = c.get('authUser') as AuthUser
     if (user) {
-      const title = data.desc || data.title || ''
-      // 尝试获取封面图，根据常见的抖音API返回结构
+      // 提取逻辑参考 Flutter 端 VideoModel.fromApi
+      const videoDetail = data.data || {}
+      let detail = videoDetail
+      if (videoDetail.aweme_detail) {
+        detail = videoDetail.aweme_detail
+      } else if (videoDetail.video && videoDetail.author) {
+        detail = videoDetail
+      }
+
+      const title = detail.desc || ''
+      
+      // 提取作者信息
+      const authorInfo = detail.author || {}
+      const authorName = authorInfo.nickname || ''
+      let authorAvatar = ''
+      if (authorInfo.avatar_thumb && authorInfo.avatar_thumb.url_list && authorInfo.avatar_thumb.url_list.length > 0) {
+        authorAvatar = authorInfo.avatar_thumb.url_list[0]
+      }
+
+      // 提取封面
       let cover = ''
-      if (data.cover_data && data.cover_data.cover && data.cover_data.cover.url_list) {
-        cover = data.cover_data.cover.url_list[0]
-      } else if (data.video && data.video.cover && data.video.cover.url_list) {
-        cover = data.video.cover.url_list[0]
+      const videoObj = detail.video || {}
+      if (videoObj.cover && videoObj.cover.url_list && videoObj.cover.url_list.length > 0) {
+        cover = videoObj.cover.url_list[0]
+      } else if (videoObj.origin_cover && videoObj.origin_cover.url_list && videoObj.origin_cover.url_list.length > 0) {
+        cover = videoObj.origin_cover.url_list[0]
       }
 
       // 使用 waitUntil 不阻塞响应
       c.executionCtx.waitUntil(
         c.env.DB.prepare(
-          'INSERT INTO parse_history (user_id, video_url, title, cover_url) VALUES (?, ?, ?, ?)'
+          'INSERT INTO parse_history (user_id, video_url, title, cover_url, author, author_avatar) VALUES (?, ?, ?, ?, ?, ?)'
         )
-          .bind(user.id, finalUrl, title, cover)
+          .bind(user.id, finalUrl, title, cover, authorName, authorAvatar)
           .run()
       )
     }
