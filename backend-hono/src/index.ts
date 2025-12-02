@@ -40,6 +40,45 @@ const verifyPassword = async (plain: string, stored: string): Promise<boolean> =
 // 启用 CORS
 app.use('/*', cors())
 
+const requireAuth = async (c: any, next: () => Promise<void>) => {
+  const auth = c.req.header('authorization') || ''
+  const [scheme, token] = auth.split(' ')
+
+  if (scheme !== 'Bearer' || !token) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const sessionJson = await c.env.AUTH_KV.get(`session:${token}`)
+  if (!sessionJson) {
+    return c.json({ message: 'Unauthorized' }, 401)
+  }
+
+  const session = JSON.parse(sessionJson) as AuthUser
+
+  // 验证用户是否存在于 D1 数据库中
+  const user = await c.env.DB.prepare('SELECT id, email FROM users WHERE id = ?')
+    .bind(session.id)
+    .first() as AuthUser | null
+
+  if (!user) {
+    return c.json({ message: 'Unauthorized - User not found' }, 401)
+  }
+
+  c.set('authUser', user)
+  c.set('authToken', token)
+  await next()
+}
+
+// 全局鉴权中间件
+app.use('/api/*', async (c, next) => {
+  // 排除登录接口
+  if (c.req.path === '/api/login') {
+    await next()
+    return
+  }
+  await requireAuth(c, next)
+})
+
 // 根路由
 app.get('/', (c) => c.text('Douyin Downloader API (Powered by Hono)'))
 
@@ -96,26 +135,7 @@ app.get('/api/redirect', async (c) => {
  * GET /api/analysis?url=https://v.douyin.com/xxx/
  * 功能：后端处理重定向 + 调用第三方API，减少前端往返延迟
  */
-const requireAuth = async (c: any, next: () => Promise<void>) => {
-  const auth = c.req.header('authorization') || ''
-  const [scheme, token] = auth.split(' ')
-
-  if (scheme !== 'Bearer' || !token) {
-    return c.json({ message: 'Unauthorized' }, 401)
-  }
-
-  const sessionJson = await c.env.AUTH_KV.get(`session:${token}`)
-  if (!sessionJson) {
-    return c.json({ message: 'Unauthorized' }, 401)
-  }
-
-  const session = JSON.parse(sessionJson) as AuthUser
-  c.set('authUser', session)
-  c.set('authToken', token)
-  await next()
-}
-
-app.get('/api/analysis', requireAuth, async (c) => {
+app.get('/api/analysis', async (c) => {
   const url = c.req.query('url')
   if (!url) {
     return c.json({ error: 'Missing URL parameter' }, 400)
@@ -245,7 +265,7 @@ app.get('/api/analysis', requireAuth, async (c) => {
  * 视频下载代理接口
  * GET /api/download?url=https://...
  */
-app.get('/api/download', requireAuth, async (c) => {
+app.get('/api/download', async (c) => {
   const url = c.req.query('url')
   // 获取文件名参数，如果没有则默认为 video.mp4
   let filename = c.req.query('filename') || 'video.mp4'
@@ -331,12 +351,12 @@ app.post('/api/login', async (c) => {
   return c.json({ token })
 })
 
-app.get('/api/me', requireAuth, async (c) => {
+app.get('/api/me', async (c) => {
   const user = c.get('authUser')
   return c.json({ user })
 })
 
-app.post('/api/change_password', requireAuth, async (c) => {
+app.post('/api/change_password', async (c) => {
   const { oldPassword, newPassword } = await c.req.json<{
     oldPassword?: string
     newPassword?: string
@@ -375,7 +395,7 @@ app.post('/api/change_password', requireAuth, async (c) => {
  * 获取解析历史接口
  * GET /api/history?page=1&limit=10
  */
-app.get('/api/history', requireAuth, async (c) => {
+app.get('/api/history', async (c) => {
   const user = c.get('authUser') as AuthUser
   const page = parseInt(c.req.query('page') || '1')
   const limit = parseInt(c.req.query('limit') || '10')
@@ -409,7 +429,7 @@ app.get('/api/history', requireAuth, async (c) => {
  * 删除单条解析历史
  * DELETE /api/history/:id
  */
-app.delete('/api/history/:id', requireAuth, async (c) => {
+app.delete('/api/history/:id', async (c) => {
   const user = c.get('authUser') as AuthUser
   const id = c.req.param('id')
 
@@ -434,7 +454,7 @@ app.delete('/api/history/:id', requireAuth, async (c) => {
  * 清空解析历史
  * DELETE /api/history
  */
-app.delete('/api/history', requireAuth, async (c) => {
+app.delete('/api/history', async (c) => {
   const user = c.get('authUser') as AuthUser
 
   try {
