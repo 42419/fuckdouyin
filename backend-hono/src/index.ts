@@ -405,5 +405,54 @@ app.get('/api/history', requireAuth, async (c) => {
   }
 })
 
+/**
+ * 删除单条解析历史
+ * DELETE /api/history/:id
+ */
+app.delete('/api/history/:id', requireAuth, async (c) => {
+  const user = c.get('authUser') as AuthUser
+  const id = c.req.param('id')
+
+  try {
+    const result = await c.env.DB.prepare(
+      'DELETE FROM parse_history WHERE id = ? AND user_id = ?'
+    )
+      .bind(id, user.id)
+      .run()
+
+    if (result.success) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Delete failed' }, 500)
+    }
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
+/**
+ * 清空解析历史
+ * DELETE /api/history
+ */
+app.delete('/api/history', requireAuth, async (c) => {
+  const user = c.get('authUser') as AuthUser
+
+  try {
+    const result = await c.env.DB.prepare(
+      'DELETE FROM parse_history WHERE user_id = ?'
+    )
+      .bind(user.id)
+      .run()
+
+    if (result.success) {
+      return c.json({ success: true })
+    } else {
+      return c.json({ error: 'Delete failed' }, 500)
+    }
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
 // 导出 app，Cloudflare Workers 会自动识别
 export default app
