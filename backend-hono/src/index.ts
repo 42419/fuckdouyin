@@ -10,6 +10,8 @@ type Env = {
 type AuthUser = {
   id: string
   email: string
+  username?: string
+  avatar?: string
 }
 
 type Vars = {
@@ -65,7 +67,7 @@ const requireAuth = async (c: any, next: () => Promise<void>) => {
   const session = JSON.parse(sessionJson) as AuthUser
 
   // 验证用户是否存在于 D1 数据库中
-  const user = await c.env.DB.prepare('SELECT id, email FROM users WHERE id = ?')
+  const user = await c.env.DB.prepare('SELECT id, email, username, avatar FROM users WHERE id = ?')
     .bind(session.id)
     .first() as AuthUser | null
 
@@ -340,7 +342,7 @@ app.post('/api/login', async (c) => {
   }
 
   const row = await c.env.DB.prepare(
-    'SELECT id, email, password FROM users WHERE email = ?'
+    'SELECT id, email, password, username, avatar FROM users WHERE email = ?'
   )
     .bind(email)
     .first<AuthUser & { password: string }>()
@@ -395,6 +397,37 @@ app.post('/api/change_password', async (c) => {
 
   await c.env.DB.prepare('UPDATE users SET password = ? WHERE id = ?')
     .bind(newHashed, user.id)
+    .run()
+
+  return c.json({ success: true })
+})
+
+app.post('/api/update_profile', async (c) => {
+  const user = c.get('authUser') as AuthUser
+  const { username, avatar } = await c.req.json<{ username?: string; avatar?: string }>()
+
+  if (username === undefined && avatar === undefined) {
+    return c.json({ message: 'Nothing to update' }, 400)
+  }
+
+  let query = 'UPDATE users SET '
+  const params: any[] = []
+  const updates: string[] = []
+
+  if (username !== undefined) {
+    updates.push('username = ?')
+    params.push(username)
+  }
+  if (avatar !== undefined) {
+    updates.push('avatar = ?')
+    params.push(avatar)
+  }
+
+  query += updates.join(', ') + ' WHERE id = ?'
+  params.push(user.id)
+
+  await c.env.DB.prepare(query)
+    .bind(...params)
     .run()
 
   return c.json({ success: true })
