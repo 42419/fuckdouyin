@@ -17,6 +17,15 @@ type Vars = {
   authToken: string
 }
 
+type Announcement = {
+  id: string
+  title: string
+  content: string
+  startTime: number // timestamp
+  endTime: number // timestamp
+  isActive: boolean
+}
+
 const app = new Hono<{ Bindings: Env; Variables: Vars }>()
 
 const isHashedPassword = (value: string) => /^[0-9a-f]{64}$/i.test(value)
@@ -71,8 +80,8 @@ const requireAuth = async (c: any, next: () => Promise<void>) => {
 
 // 全局鉴权中间件
 app.use('/api/*', async (c, next) => {
-  // 排除登录接口
-  if (c.req.path === '/api/login') {
+  // 排除登录接口和公告获取接口
+  if (c.req.path === '/api/login' || (c.req.path === '/api/announcement' && c.req.method === 'GET')) {
     await next()
     return
   }
@@ -469,6 +478,59 @@ app.delete('/api/history', async (c) => {
     } else {
       return c.json({ error: 'Delete failed' }, 500)
     }
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
+/**
+ * 获取当前公告
+ * GET /api/announcement
+ */
+app.get('/api/announcement', async (c) => {
+  try {
+    const announcementJson = await c.env.AUTH_KV.get('announcement')
+    if (!announcementJson) {
+      return c.json({ message: 'No announcement' }, 404)
+    }
+    const announcement = JSON.parse(announcementJson) as Announcement
+    return c.json(announcement)
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
+/**
+ * 发布/更新公告
+ * POST /api/announcement
+ * body: Announcement
+ */
+app.post('/api/announcement', async (c) => {
+  const user = c.get('authUser') as AuthUser
+  if (user.id !== 'u1') {
+    return c.json({ message: 'Forbidden' }, 403)
+  }
+
+  try {
+    const data = await c.req.json<Announcement>()
+    
+    // 简单验证
+    if (!data.title || !data.content || !data.startTime || !data.endTime) {
+      return c.json({ message: 'Missing required fields' }, 400)
+    }
+
+    const announcement: Announcement = {
+      id: data.id || crypto.randomUUID(),
+      title: data.title,
+      content: data.content,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      isActive: data.isActive ?? true
+    }
+
+    await c.env.AUTH_KV.put('announcement', JSON.stringify(announcement))
+    
+    return c.json(announcement)
   } catch (e) {
     return c.json({ error: String(e) }, 500)
   }
