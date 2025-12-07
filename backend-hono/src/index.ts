@@ -538,10 +538,11 @@ app.get('/api/announcement', async (c) => {
  * GET /api/announcements
  */
 app.get('/api/announcements', async (c) => {
-  const user = c.get('authUser') as AuthUser
-  if (user.id !== 'u1') {
-    return c.json({ message: 'Forbidden' }, 403)
-  }
+  // Allow any authenticated user to view history
+  // const user = c.get('authUser') as AuthUser
+  // if (user.id !== 'u1') {
+  //   return c.json({ message: 'Forbidden' }, 403)
+  // }
 
   try {
     const { results } = await c.env.DB.prepare(
