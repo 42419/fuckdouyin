@@ -489,12 +489,76 @@ app.delete('/api/history', async (c) => {
  */
 app.get('/api/announcement', async (c) => {
   try {
-    const announcementJson = await c.env.AUTH_KV.get('announcement')
-    if (!announcementJson) {
+    // 尝试创建表（如果不存在）- 实际生产中建议通过 migration 管理
+    await c.env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS announcements (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at INTEGER,
+        updated_at INTEGER
+      )
+    `).run()
+
+    const now = Date.now()
+    const announcement = await c.env.DB.prepare(`
+      SELECT * FROM announcements 
+      WHERE is_active = 1 
+      AND start_time <= ? 
+      AND end_time >= ? 
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `)
+    .bind(now, now)
+    .first<any>()
+
+    if (!announcement) {
       return c.json({ message: 'No announcement' }, 404)
     }
-    const announcement = JSON.parse(announcementJson) as Announcement
-    return c.json(announcement)
+
+    // 转换字段名以匹配前端模型
+    return c.json({
+      id: announcement.id,
+      title: announcement.title,
+      content: announcement.content,
+      startTime: announcement.start_time,
+      endTime: announcement.end_time,
+      isActive: Boolean(announcement.is_active)
+    })
+  } catch (e) {
+    return c.json({ error: String(e) }, 500)
+  }
+})
+
+/**
+ * 获取公告历史列表
+ * GET /api/announcements
+ */
+app.get('/api/announcements', async (c) => {
+  const user = c.get('authUser') as AuthUser
+  if (user.id !== 'u1') {
+    return c.json({ message: 'Forbidden' }, 403)
+  }
+
+  try {
+    const { results } = await c.env.DB.prepare(
+      'SELECT * FROM announcements ORDER BY created_at DESC LIMIT 50'
+    ).all<any>()
+
+    const announcements = results.map(a => ({
+      id: a.id,
+      title: a.title,
+      content: a.content,
+      startTime: a.start_time,
+      endTime: a.end_time,
+      isActive: Boolean(a.is_active),
+      createdAt: a.created_at
+    }))
+
+    return c.json(announcements)
   } catch (e) {
     return c.json({ error: String(e) }, 500)
   }
@@ -519,16 +583,40 @@ app.post('/api/announcement', async (c) => {
       return c.json({ message: 'Missing required fields' }, 400)
     }
 
+    const id = data.id || crypto.randomUUID()
+    const now = Date.now()
+
+    await c.env.DB.prepare(`
+      INSERT INTO announcements (id, title, content, start_time, end_time, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      content = excluded.content,
+      start_time = excluded.start_time,
+      end_time = excluded.end_time,
+      is_active = excluded.is_active,
+      updated_at = excluded.updated_at
+    `)
+    .bind(
+      id,
+      data.title,
+      data.content,
+      data.startTime,
+      data.endTime,
+      data.isActive ? 1 : 0,
+      now, // created_at (ignored on update)
+      now  // updated_at
+    )
+    .run()
+
     const announcement: Announcement = {
-      id: data.id || crypto.randomUUID(),
+      id,
       title: data.title,
       content: data.content,
       startTime: data.startTime,
       endTime: data.endTime,
       isActive: data.isActive ?? true
     }
-
-    await c.env.AUTH_KV.put('announcement', JSON.stringify(announcement))
     
     return c.json(announcement)
   } catch (e) {
