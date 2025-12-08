@@ -50,6 +50,7 @@ const verifyPassword = async (plain: string, stored: string): Promise<boolean> =
 
 const ensureUserHistoryTable = async (db: D1Database, userId: string) => {
   const tableName = `history_${userId}`
+  console.log(`Ensuring table exists: ${tableName}`); // Add logging
   // 简单的防注入检查，确保 userId 只包含字母数字
   if (!/^[a-zA-Z0-9_]+$/.test(userId)) {
     throw new Error('Invalid user ID for table creation')
@@ -271,6 +272,7 @@ app.get('/api/analysis', async (c) => {
       // 使用 INSERT OR REPLACE 来处理重复记录，更新时间戳
       c.executionCtx.waitUntil(
         (async () => {
+          console.log(`Saving history for user: ${user.id}`);
           await ensureUserHistoryTable(c.env.DB, user.id)
           await c.env.DB.prepare(
             `INSERT INTO history_${user.id} (video_url, title, cover_url, author, author_avatar, created_at) 
