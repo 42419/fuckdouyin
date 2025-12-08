@@ -48,6 +48,27 @@ const verifyPassword = async (plain: string, stored: string): Promise<boolean> =
   return plain === stored
 }
 
+const ensureUserHistoryTable = async (db: D1Database, userId: string) => {
+  const tableName = `history_${userId}`
+  // 简单的防注入检查，确保 userId 只包含字母数字
+  if (!/^[a-zA-Z0-9_]+$/.test(userId)) {
+    throw new Error('Invalid user ID for table creation')
+  }
+
+  await db.prepare(`
+    CREATE TABLE IF NOT EXISTS ${tableName} (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      video_url TEXT NOT NULL,
+      title TEXT,
+      cover_url TEXT,
+      author TEXT,
+      author_avatar TEXT,
+      created_at INTEGER,
+      UNIQUE(video_url)
+    )
+  `).run()
+}
+
 // 启用 CORS
 app.use('/*', cors())
 
@@ -249,18 +270,21 @@ app.get('/api/analysis', async (c) => {
       // 使用 waitUntil 不阻塞响应
       // 使用 INSERT OR REPLACE 来处理重复记录，更新时间戳
       c.executionCtx.waitUntil(
-        c.env.DB.prepare(
-          `INSERT INTO parse_history (user_id, video_url, title, cover_url, author, author_avatar, created_at) 
-           VALUES (?, ?, ?, ?, ?, ?, strftime('%s', 'now'))
-           ON CONFLICT(user_id, video_url) DO UPDATE SET 
-           created_at = strftime('%s', 'now'),
-           title = excluded.title,
-           cover_url = excluded.cover_url,
-           author = excluded.author,
-           author_avatar = excluded.author_avatar`
-        )
-          .bind(user.id, finalUrl, title, cover, authorName, authorAvatar)
-          .run()
+        (async () => {
+          await ensureUserHistoryTable(c.env.DB, user.id)
+          await c.env.DB.prepare(
+            `INSERT INTO history_${user.id} (video_url, title, cover_url, author, author_avatar, created_at) 
+             VALUES (?, ?, ?, ?, ?, strftime('%s', 'now'))
+             ON CONFLICT(video_url) DO UPDATE SET 
+             created_at = strftime('%s', 'now'),
+             title = excluded.title,
+             cover_url = excluded.cover_url,
+             author = excluded.author,
+             author_avatar = excluded.author_avatar`
+          )
+            .bind(finalUrl, title, cover, authorName, authorAvatar)
+            .run()
+        })()
       )
     }
 
@@ -444,16 +468,17 @@ app.get('/api/history', async (c) => {
   const offset = (page - 1) * limit
 
   try {
+    await ensureUserHistoryTable(c.env.DB, user.id)
+
     const { results } = await c.env.DB.prepare(
-      'SELECT * FROM parse_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+      `SELECT * FROM history_${user.id} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     )
-      .bind(user.id, limit, offset)
+      .bind(limit, offset)
       .all()
 
     const totalResult = await c.env.DB.prepare(
-      'SELECT COUNT(*) as count FROM parse_history WHERE user_id = ?'
+      `SELECT COUNT(*) as count FROM history_${user.id}`
     )
-      .bind(user.id)
       .first<{ count: number }>()
 
     return c.json({
@@ -476,10 +501,11 @@ app.delete('/api/history/:id', async (c) => {
   const id = c.req.param('id')
 
   try {
+    await ensureUserHistoryTable(c.env.DB, user.id)
     const result = await c.env.DB.prepare(
-      'DELETE FROM parse_history WHERE id = ? AND user_id = ?'
+      `DELETE FROM history_${user.id} WHERE id = ?`
     )
-      .bind(id, user.id)
+      .bind(id)
       .run()
 
     if (result.success) {
@@ -500,10 +526,10 @@ app.delete('/api/history', async (c) => {
   const user = c.get('authUser') as AuthUser
 
   try {
+    await ensureUserHistoryTable(c.env.DB, user.id)
     const result = await c.env.DB.prepare(
-      'DELETE FROM parse_history WHERE user_id = ?'
+      `DELETE FROM history_${user.id}`
     )
-      .bind(user.id)
       .run()
 
     if (result.success) {
